@@ -1,0 +1,15 @@
+<web-app>
+	<display-name>GWT-Maven-Archetype</display-name>	
+	
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+	</welcome-file-list>
+	<servlet>
+		<servlet-name>GrisuClientService</servlet-name>
+		<servlet-class>org.vpac.grisu.webclient.server.GrisuClientServiceImpl</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>GrisuClientService</servlet-name>
+		<url-pattern>/org.vpac.grisu.webclient.Application/GrisuClientService</url-pattern>
+	</servlet-mapping>
+</web-app>
