@@ -232,7 +232,6 @@ public class FileListPanel extends LayoutContainer {
 			grid.addListener(Events.CellDoubleClick, new Listener<BaseEvent>() {
 
 				public void handleEvent(BaseEvent be) {
-					GridEvent ge = (GridEvent) be;
 
 					loader.load();
 
