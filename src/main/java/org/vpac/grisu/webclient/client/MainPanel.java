@@ -18,6 +18,7 @@ public class MainPanel extends LayoutContainer {
 	private CenterPanel centerPanel;
 	private Hyperlink hyperlink;
 	private Hyperlink hyperlink_1;
+	private Hyperlink hyperlink_2;
 
 	public MainPanel() {
 		setWidth("960");
@@ -35,6 +36,7 @@ public class MainPanel extends LayoutContainer {
 			contentPanel.setCollapsible(true);
 			contentPanel.add(getHyperlink());
 			contentPanel.add(getHyperlink_1());
+			contentPanel.add(getHyperlink_2());
 		}
 		return contentPanel;
 	}
@@ -46,7 +48,7 @@ public class MainPanel extends LayoutContainer {
 	}
 	private Hyperlink getHyperlink() {
 		if (hyperlink == null) {
-			hyperlink = new Hyperlink("Create generic job", false, "newHistoryToken");
+			hyperlink = new Hyperlink("Create generic job", false, "createJob");
 			hyperlink.addClickHandler(new ClickHandler() {
 				public void onClick(ClickEvent arg0) {
 					
@@ -59,7 +61,7 @@ public class MainPanel extends LayoutContainer {
 	}
 	private Hyperlink getHyperlink_1() {
 		if (hyperlink_1 == null) {
-			hyperlink_1 = new Hyperlink("Monitor running jobs", false, "newHistoryToken");
+			hyperlink_1 = new Hyperlink("Monitor running jobs", false, "jobs");
 			hyperlink_1.addClickHandler(new ClickHandler() {
 				public void onClick(ClickEvent arg0) {
 					
@@ -69,5 +71,18 @@ public class MainPanel extends LayoutContainer {
 			});
 		}
 		return hyperlink_1;
+	}
+	private Hyperlink getHyperlink_2() {
+		if (hyperlink_2 == null) {
+			hyperlink_2 = new Hyperlink("Files", false, "files");
+			hyperlink_2.addClickHandler(new ClickHandler() {
+				public void onClick(ClickEvent arg0) {
+					
+					getCenterPanel().setVisiblePanel(CenterPanel.FILEMANAGER);
+					
+				}
+			});
+		}
+		return hyperlink_2;
 	}
 }

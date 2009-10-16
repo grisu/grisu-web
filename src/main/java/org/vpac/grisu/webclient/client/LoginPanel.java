@@ -18,6 +18,7 @@ import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.form.FormPanel.LabelAlign;
 import com.extjs.gxt.ui.client.widget.layout.CenterLayout;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.RootPanel;
 
@@ -31,6 +32,27 @@ public class LoginPanel extends LayoutContainer {
 	public LoginPanel() {
 		setLayout(new CenterLayout());
 		add(getLoginBox());
+		
+		getLoginBox().disable();
+		GrisuClientService.Util.getInstance().login(
+				getTextField_1().getValue(),
+				getTextField_1_1().getValue(),
+				new AsyncCallback<Boolean>() {
+
+					public void onFailure(Throwable arg0) {
+						getLoginBox().enable();
+						// doesn't matter
+
+					}
+
+					public void onSuccess(Boolean arg0) {
+						getLoginBox().enable();
+						if ( arg0 ) {
+							loadMainPanel();
+						}
+						
+					}
+				});
 
 	}
 
@@ -97,7 +119,7 @@ public class LoginPanel extends LayoutContainer {
 					GrisuClientService.Util.getInstance().login(
 							getTextField_1().getValue(),
 							getTextField_1_1().getValue(),
-							new AsyncCallback<Void>() {
+							new AsyncCallback<Boolean>() {
 
 								public void onFailure(Throwable arg0) {
 
@@ -119,11 +141,15 @@ public class LoginPanel extends LayoutContainer {
 
 								}
 
-								public void onSuccess(Void arg0) {
+								public void onSuccess(Boolean arg0) {
 
 									box.close();
 									
-									loadMainPanel();
+									if ( arg0 ) {
+										loadMainPanel();
+									} else {
+										Window.alert("Could not log in for some reason... This is a bug.");
+									}
 									
 									
 								}

@@ -1,4 +1,7 @@
-package org.vpac.grisu.webclient.client;
+package org.vpac.grisu.webclient.client.jobcreation;
+
+import org.vpac.grisu.webclient.client.GrisuClientService;
+import org.vpac.grisu.webclient.client.GrisuClientService.Util;
 
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;

@@ -18,6 +18,9 @@
 	  <source path="client" excludes="*/*Test*.java" />
 	  
 	  <inherits name='com.extjs.gxt.ui.GXT'/>
+	  
+	  <inherits name='org.vpac.grisu.GrisuGwt' />
+	  
 
 
 </module>

@@ -1,4 +1,4 @@
-package org.vpac.grisu.webclient.client;
+package org.vpac.grisu.webclient.client.jobmonitoring;
 
 import java.util.Date;
 import java.util.Map;

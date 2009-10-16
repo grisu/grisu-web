@@ -1,36 +1,43 @@
-package org.vpac.grisu.webclient.client;
+package org.vpac.grisu.webclient.client.jobmonitoring;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.vpac.grisu.webclient.client.GrisuClientService;
 import org.vpac.grisu.webclient.client.external.Constants;
 
-import com.extjs.gxt.ui.client.Style;
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
 import com.extjs.gxt.ui.client.Style.Orientation;
 import com.extjs.gxt.ui.client.data.BaseListLoader;
 import com.extjs.gxt.ui.client.data.ListLoadResult;
 import com.extjs.gxt.ui.client.data.ListLoader;
 import com.extjs.gxt.ui.client.data.RpcProxy;
+import com.extjs.gxt.ui.client.event.ButtonEvent;
+import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.util.Margins;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
+import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.layout.RowData;
 import com.extjs.gxt.ui.client.widget.layout.RowLayout;
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class JobListPanel extends LayoutContainer {
 	private Grid grid;
 	private ContentPanel contentPanel;
+	
+	private ListLoader loader;
+	private Button button;
 
 	public JobListPanel() {
 		setLayout(new RowLayout(Orientation.VERTICAL));
-		add(getGrid(), new RowData(Style.DEFAULT, 0.8, new Margins()));
-		add(getContentPanel(), new RowData(Style.DEFAULT, 0.2, new Margins()));
+		add(getGrid(), new RowData(1.0, 0.8, new Margins(10, 10, 10, 10)));
+		add(getContentPanel(), new RowData(1.0, 0.2, new Margins(0, 10, 10, 10)));
 
 	}
 	
@@ -52,10 +59,10 @@ public class JobListPanel extends LayoutContainer {
 		column.setAlignment(HorizontalAlignment.LEFT);
 		configs.add(column);
 
-//		column = new ColumnConfig(Constants.SUBMISSION_TIME_KEY, "Submitted on", 100);
-//		column.setAlignment(HorizontalAlignment.RIGHT);
-//		column.setDateTimeFormat(DateTimeFormat.getShortDateFormat());
-//		configs.add(column);
+		column = new ColumnConfig(Constants.SUBMISSION_TIME_KEY, "Submitted on", 100);
+		column.setAlignment(HorizontalAlignment.RIGHT);
+		column.setDateTimeFormat(DateTimeFormat.getShortDateFormat());
+		configs.add(column);
 		
 		return configs;
 	}
@@ -74,7 +81,7 @@ public class JobListPanel extends LayoutContainer {
 				}
 			};
 			
-			ListLoader loader = new BaseListLoader<ListLoadResult<GrisuJob>>(proxy); 
+			loader = new BaseListLoader<ListLoadResult<GrisuJob>>(proxy); 
 				
 			ListStore<GrisuJob> store = new ListStore<GrisuJob>(loader); 
 			loader.load();
@@ -82,10 +89,10 @@ public class JobListPanel extends LayoutContainer {
 			ColumnModel cm = new ColumnModel(createColumnConfig());
 			
 			grid = new Grid<GrisuJob>(store, cm);
+			grid.setStyleAttribute("borderTop", "none"); 
 			grid.setBorders(true);
 			grid.setAutoExpandColumn(Constants.JOBNAME_KEY);  
-			grid.setWidth(400);  
-			grid.setAutoHeight(true);  
+			grid.setStripeRows(true);  
 		}
 		return grid;
 	}
@@ -95,7 +102,19 @@ public class JobListPanel extends LayoutContainer {
 			contentPanel = new ContentPanel();
 			contentPanel.setHeading("New ContentPanel");
 			contentPanel.setCollapsible(true);
+			contentPanel.add(getButton());
 		}
 		return contentPanel;
+	}
+	private Button getButton() {
+		if (button == null) {
+			button = new Button("New Button");
+			button.addSelectionListener(new SelectionListener<ButtonEvent>() {
+				public void componentSelected(ButtonEvent ce) {
+					loader.load();
+				}
+			});
+		}
+		return button;
 	}
 }
