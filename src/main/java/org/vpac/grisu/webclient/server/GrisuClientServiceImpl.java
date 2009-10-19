@@ -18,6 +18,7 @@ import org.vpac.grisu.frontend.control.login.LoginParams;
 import org.vpac.grisu.frontend.control.login.ServiceInterfaceFactory;
 import org.vpac.grisu.model.dto.DtoJob;
 import org.vpac.grisu.model.dto.DtoJobs;
+import org.vpac.grisu.model.dto.DtoStringList;
 import org.vpac.grisu.settings.ClientPropertiesManager;
 import org.vpac.grisu.webclient.client.GrisuClientService;
 import org.vpac.grisu.webclient.client.exceptions.LoginException;
@@ -166,6 +167,20 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 			throw new RuntimeException(e);
 		}
 	}
+
+	public String cp(List<String> sources, String target) {
+
+		DtoStringList dtoSources = DtoStringList.fromStringList(sources);
+		String handle = null;
+		try {
+			handle = getServiceInterface().cp(dtoSources, target, true, false);
+		} catch (RemoteFileSystemException e) {
+			e.printStackTrace();
+		}
+		
+		return handle;
+	}
+
 	
 
 }

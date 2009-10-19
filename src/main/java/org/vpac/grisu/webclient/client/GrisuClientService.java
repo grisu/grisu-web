@@ -36,4 +36,6 @@ public interface GrisuClientService extends RemoteService {
 	
 	public List<GrisuFileObject> ls(String url);
 	
+	public String cp(List<String> sources, String target);
+	
 }

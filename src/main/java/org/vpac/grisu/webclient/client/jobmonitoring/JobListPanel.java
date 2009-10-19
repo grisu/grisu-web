@@ -68,8 +68,8 @@ public class JobListPanel extends LayoutContainer {
 	}
 	
 	private Grid getGrid() {
-		if (grid == null) {
 
+		if (grid == null) {
 			// data proxy
 			RpcProxy<List<GrisuJob>> proxy = new RpcProxy<List<GrisuJob>>() {
 				@Override

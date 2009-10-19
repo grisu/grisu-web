@@ -19,4 +19,6 @@ public interface GrisuClientServiceAsync {
 	
 	public void ls(String url, AsyncCallback<List<GrisuFileObject>> callback);
 	
+	public void cp(List<String> sources, String target, AsyncCallback<String> callback);
+	
 }
