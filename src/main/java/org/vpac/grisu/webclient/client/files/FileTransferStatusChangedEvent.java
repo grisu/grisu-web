@@ -2,39 +2,37 @@ package org.vpac.grisu.webclient.client.files;
 
 import java.util.List;
 
-import org.vpac.grisu.webclient.client.GrisuClientService;
-
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 
-public class FileTransferStartedEvent extends GwtEvent<FileTransferStartedEvent.Handler> {
+public class FileTransferStatusChangedEvent extends GwtEvent<FileTransferStatusChangedEvent.Handler> {
 	
     /**
      * Interface to describe this event. Handlers must implement.
      */
     public interface Handler extends EventHandler {
-            public void onFileTransferStarted(FileTransferStartedEvent e);
+            public void onFileTransferStatusChanged(FileTransferStatusChangedEvent e);
     }
 
-    public static final GwtEvent.Type<FileTransferStartedEvent.Handler> TYPE = new GwtEvent.Type<FileTransferStartedEvent.Handler>();
+    public static final GwtEvent.Type<FileTransferStatusChangedEvent.Handler> TYPE = new GwtEvent.Type<FileTransferStatusChangedEvent.Handler>();
 
     @Override
 	protected void dispatch(Handler handler) {
-		handler.onFileTransferStarted(this);
+		handler.onFileTransferStatusChanged(this);
 		
 	}
 	
     @Override
-    public GwtEvent.Type<FileTransferStartedEvent.Handler> getAssociatedType() {
+    public GwtEvent.Type<FileTransferStatusChangedEvent.Handler> getAssociatedType() {
             return TYPE;
     }
     
-    private FileTransferObject fto;
+    private FileTransferObject fto = null;
     
-    public FileTransferStartedEvent() {
+    public FileTransferStatusChangedEvent() {
     }
     
-    public FileTransferStartedEvent(FileTransferObject fto) {
+    public FileTransferStatusChangedEvent(FileTransferObject fto) {
     	this.fto = fto;
     }
 
@@ -54,5 +52,12 @@ public class FileTransferStartedEvent extends GwtEvent<FileTransferStartedEvent.
 		return this.fto;
 	}
 	
+	public boolean isFileTransferFinished() {
+		return fto.isFinished();
+	}
+
+	public boolean isFileTransferFailed() {
+		return fto.isFailed();
+	}
 
 }

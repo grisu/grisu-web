@@ -13,7 +13,7 @@
 
 	<properties>
 		<!-- convenience to define GWT version in one place -->
-		<gwt.version>1.7.0</gwt.version>
+		<gwt.version>1.7.1</gwt.version>
 		<gxt.version>2.0.1</gxt.version>
 		<!--  tell the compiler we can use 1.5 -->
 		<maven.compiler.source>1.5</maven.compiler.source>

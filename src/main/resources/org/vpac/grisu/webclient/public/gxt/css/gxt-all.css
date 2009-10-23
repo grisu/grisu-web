@@ -2716,13 +2716,13 @@ a.x-grid3-hd-btn:hover {
 }
 
 .my-tree-item-text span {
+	display: block;
+	height: 15px;
+	padding-right: 3px;
+	padding-left: 3px;
 	font-family: arial, tahoma, helvetica, sans-serif;
 	font-size: 12px;
 	white-space: nowrap;
-	padding-left: 3px;
-	padding-right: 3px;
-	display: block;
-	height: 15px;
 	cursor: pointer;
 }
 
@@ -6534,10 +6534,10 @@ a.x-menu-item {
     border-color: #99bbe8;
 }
 .x-panel-header {
-    color:#15428b;
 	font:bold 11px tahoma,arial,verdana,sans-serif;
-    border-color:#99bbe8;
-    background-image: url(../images/default/panel/white-top-bottom.gif);
+	color: #15428b;
+	border: #99bbe8;
+	background-image: url(../images/default/panel/white-top-bottom.gif);
 }
 .x-panel-body {
     border-color:#99bbe8;

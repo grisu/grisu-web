@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.vpac.grisu.client.model.dto.DtoActionStatus;
 import org.vpac.grisu.webclient.client.EventBus;
 import org.vpac.grisu.webclient.client.GrisuClientService;
 
@@ -25,6 +24,7 @@ import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.LoadListener;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.util.Format;
+import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.grid.ColumnData;
@@ -32,34 +32,75 @@ import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.grid.GridCellRenderer;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
+import com.google.gwt.event.logical.shared.HasValueChangeHandlers;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Element;
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
 
-public class FileListPanel extends LayoutContainer {
+public class FileListPanel extends LayoutContainer implements FileTransferStatusChangedEvent.Handler, HasValueChangeHandlers<GrisuFileObject> {
 
 	private Grid grid;
 	private ListLoader loader;
 	
-	private String startRootUrl = null;
-	private boolean initFinished = false;
+	private GrisuFileObject nextUrlToLoad = null;
 	
 	private DragSource gridDragSource = null;
 	private DropTarget gridDropTarget = null;
 	
 	private GrisuFileObject currentDirectory = null;
-
+	
+	private final String fileListName;
+	private String lastRetrievedValue;
+	
+	private ContentPanel containerPanel = null;
+	
 	final Image img = new Image("gxt/images/default/tree/folder.gif");
 
-	/**
-	 * @wbp.parser.constructor
-	 */
-	public FileListPanel() {
+//	/**
+//	 * @wbp.parser.constructor
+//	 */
+//	public FileListPanel() {
+//		this(null, null);
+//	}
+	
+	public FileListPanel(final String startRootUrl, final String optionalFileListName) {
+
+		this.fileListName = optionalFileListName;
+		
 		setBorders(false);
 		initialize();
+
+		if ( startRootUrl == null && this.fileListName != null && ! "".equals(this.fileListName) ) {
+			retrieveAndSetLastUsedDirectory();
+		}
+		
+		if ( startRootUrl != null && !"".equals(startRootUrl) ) {
+			setCurrentDirectory(startRootUrl);
+		}
+		
+		
+	}
+	
+//	private ContentPanel getContainerPanel() {
+//		
+//		if ( containerPanel == null ) {
+//			containerPanel = new ContentPanel(new FitLayout());
+//			containerPanel.setHeaderVisible(false);
+//			containerPanel.setBodyBorder(false);
+//			containerPanel.add(getGrid());
+//		}
+//		return containerPanel;
+//	}
+
+	private void initialize() {
+		setLayout(new FitLayout());
+		add(getGrid());
+
 		gridDragSource = new DragSource(getGrid()) {
 			@Override  
 			protected void onDragStart(DNDEvent e) {  
@@ -70,7 +111,7 @@ public class FileListPanel extends LayoutContainer {
 			      return;
 			    }
 
-			    List<GrisuFileObject> sel = grid.getSelectionModel().getSelectedItems();
+			    List<GrisuFileObject> sel = getSelectedItems();
 			    
 			    for ( GrisuFileObject file : sel ) {
 			    	if ( ! GrisuFileObject.FILETYPE_FOLDER.equals(file.getFileType()) &&
@@ -96,82 +137,57 @@ public class FileListPanel extends LayoutContainer {
 			
 		};
 		gridDropTarget = new DropTarget(getGrid()) {
+			
+			@Override
+			protected void onDragEnter(DNDEvent event) {
+				
+				getGrid().mask();
+				
+			}
+			
+			@Override
+			protected void onDragLeave(DNDEvent event) {
+				getGrid().unmask();
+			}
+			
 			@Override  
 			protected void onDragDrop(DNDEvent event) {  
 				
+				getGrid().unmask();
 			    super.onDragDrop(event);  
+
 			    final List<GrisuFileObject> sources = event.getData();  
 
-			    final List<String> sourceNames = new ArrayList<String>();
-			    for ( GrisuFileObject file : sources ) {
-			    	sourceNames.add(file.getUrl());
-			    }
+			    copyFilesToCurrentDirectory(sources);
 
-			    final GrisuFileObject target = getCurrentDirectory();
-			    
-			    GrisuClientService.Util.getInstance().cp(sourceNames, target.getUrl(), new AsyncCallback<String>() {
-
-					public void onFailure(Throwable arg0) {
-
-						arg0.printStackTrace();
-						Window.alert(arg0.getLocalizedMessage());
-						
-					}
-
-					public void onSuccess(final String arg0) {
-
-						FileTransferStartedEvent startEvent = new FileTransferStartedEvent(sources, target);
-						EventBus.get().fireEvent(startEvent);
-						
-						final Timer timer = new Timer() {
-
-							@Override
-							public void run() {
-
-								GrisuClientService.Util.getInstance().getCurrentStatus(arg0, new AsyncCallback<DtoActionStatus>() {
-
-									public void onFailure(Throwable arg0) {
-
-										System.out.println("Failure: "+arg0.getLocalizedMessage());
-									}
-
-									public void onSuccess(DtoActionStatus arg0) {
-
-										System.out.println("Status: ");
-										for ( int i=0; i<arg0.getLog().size(); i++ ) {
-											System.out.println(arg0.getLog().get(i));
-										}
-										System.out.println("-------------------------------------");
-										
-//										if ( arg0.getCurrentElements() == arg0.getTotalElements() ) {
-//											timer.cancel();
-//										}
-
-									}
-								});
-								
-								
-							}
-						};
-						
-						timer.scheduleRepeating(1000);
-						
-					}
-				});
-			    
 			}  
 		};
 		gridDropTarget.setAllowSelfAsSource(false);
+		
+		EventBus.get().addHandler(FileTransferStatusChangedEvent.TYPE, this);
 	}
 	
-	public FileListPanel(String startRootUrl) {
-		this.startRootUrl = startRootUrl;
-		initialize();
+	public List<GrisuFileObject> getSelectedItems() {
+		
+		return getGrid().getSelectionModel().getSelectedItems();
+		
 	}
-
-	private void initialize() {
-		setLayout(new FitLayout());
-		add(getGrid());
+	
+	/**
+	 * Copies the specfied files into the current directory.
+	 * 
+	 * @param sources the sources
+	 * @return whether the filetransfer was started or not
+	 */
+	public boolean copyFilesToCurrentDirectory(List<GrisuFileObject> sources) {
+		
+	    final GrisuFileObject target = getCurrentDirectory();
+	    
+	    FileTransferObject fto = new FileTransferObject(sources, target);
+	    
+	    return fto.startTransfer();
+	    
+		
 	}
 	
 	private List<ColumnConfig> createColumnConfig() {
@@ -292,35 +308,37 @@ public class FileListPanel extends LayoutContainer {
 		return (GrisuFileObject) file;
 
 	}
-
+	
 	private Grid getGrid() {
 		if (grid == null) {
 			// data proxy
 			RpcProxy<List<GrisuFileObject>> proxy = new RpcProxy<List<GrisuFileObject>>() {
 				@Override
 				protected void load(Object loadConfig,
-						AsyncCallback<List<GrisuFileObject>> callback) {
+						final AsyncCallback<List<GrisuFileObject>> callback) {
 
-					String url = null;
 					
 					GrisuFileObject file = null;
-					if ( startRootUrl != null && startRootUrl.equals("") && ! initFinished ) {
-						url = startRootUrl;
+					if ( nextUrlToLoad != null ) {
+						currentDirectory = nextUrlToLoad;
+						nextUrlToLoad = null;
 					} else {
 						file = getCurrentlySelectedFile();
 						if (file != null) {
-							url = file.getUrl();
 							if ( GrisuFileObject.FILETYPE_FILE.equals(file.getFileType()) ) {
 								System.out.println("Filetype: file, doing nothing..., shouldn't happen");
 								return;
 							}
 							currentDirectory = file;
 						} else {
-							System.out.println("Nothing selected, doing nothing, this shouldn't happen I think...");
-//							return;
+							currentDirectory = new GrisuFileObject(GrisuFileObject.FILETYPE_ROOT, 
+									GrisuFileObject.FILETYPE_ROOT, GrisuFileObject.FILETYPE_ROOT, 0L, null);
 						}
 					}
-					GrisuClientService.Util.getInstance().ls(url, callback);
+					setStatusPath();
+
+					GrisuClientService.Util.getInstance().ls(currentDirectory.getUrl(), callback);
+
 				}
 			};
 			
@@ -346,6 +364,36 @@ public class FileListPanel extends LayoutContainer {
 					public void loaderLoad(LoadEvent le) {
 //						le.g
 						getGrid().unmask();
+						
+						if ( fileListName != null && !"".equals(fileListName) ) {
+							
+							if ( getCurrentDirectory() == null || getCurrentDirectory().getUrl() == null 
+									|| getCurrentDirectory().getFileType().equals(GrisuFileObject.FILETYPE_ROOT) ) {
+								return;
+							}
+							
+							if ( lastRetrievedValue != null && lastRetrievedValue.equals(getCurrentDirectory().getUrl())) {
+								return;
+							}
+							
+							GrisuClientService.Util.getInstance().setUserProperty(fileListName, getCurrentDirectory().getUrl(), new AsyncCallback<Void>() {
+
+								public void onFailure(Throwable arg0) {
+									
+									arg0.printStackTrace();
+									
+								}
+
+								public void onSuccess(Void arg0) {
+
+									// nothing to do really
+									System.out.println("Saved property.");
+									
+								}
+							});
+							
+							
+						}
 					}
 					
 					@Override
@@ -356,7 +404,6 @@ public class FileListPanel extends LayoutContainer {
 				});
 
 				loader.load();
-				initFinished = true;
 				
 				grid.setStyleAttribute("borderTop", "none");
 				grid.setBorders(false);
@@ -367,11 +414,18 @@ public class FileListPanel extends LayoutContainer {
 
 					public void handleEvent(BaseEvent be) {
 
+						System.out.println("Double clicked: "+getCurrentlySelectedFile().getUrl());
+						
+						try {
 						if ( GrisuFileObject.FILETYPE_FILE.equals(getCurrentlySelectedFile().getFileType()) ) {
+							ValueChangeEvent.fire(FileListPanel.this, getCurrentlySelectedFile());
 							return;
 						}
 						
 						loader.load();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 
 					}
 
@@ -389,11 +443,97 @@ public class FileListPanel extends LayoutContainer {
 		return grid;
 	}
 	
+	public void setCurrentDirectory(GrisuFileObject file) {
+		nextUrlToLoad = file;
+		loader.load();
+	}
+	
+	public void setCurrentDirectory(final String url) {
+		
+		if ( url == null || "".equals(url) || GrisuFileObject.FILETYPE_ROOT.equals(url) ) {
+			setCurrentDirectory((GrisuFileObject)null);
+			return;
+		}
+		
+		GrisuClientService.Util.getInstance().getFile(url, new AsyncCallback<GrisuFileObject>() {
+
+			public void onFailure(Throwable arg0) {
+
+				Window.alert("Could not access "+url);
+				arg0.printStackTrace();
+			}
+
+			public void onSuccess(GrisuFileObject arg0) {
+
+				setCurrentDirectory(arg0);
+			}
+		});
+
+	}
+	
+	public void retrieveAndSetLastUsedDirectory() {
+		
+		if ( fileListName != null && ! "".equals(fileListName) ) {
+			
+			GrisuClientService.Util.getInstance().getUserProperty(fileListName, new AsyncCallback<String>() {
+
+				public void onFailure(Throwable arg0) {
+
+					Window.alert("Couldn't load last used directory: "+arg0.getLocalizedMessage());
+					arg0.printStackTrace();
+					
+					setCurrentDirectory((GrisuFileObject)null);
+				}
+
+				public void onSuccess(String arg0) {
+
+					setCurrentDirectory(arg0);
+					lastRetrievedValue = arg0;
+				}
+			});
+			
+		}
+		
+	}
+	
 	public GrisuFileObject getCurrentDirectory() {
 		return currentDirectory;
+	}
+	
+	public void refreshCurrentDirectory() {
+		
+		setCurrentDirectory(getCurrentDirectory());
+		
+		
 	}
 
 	private static final boolean isDesignTime() {
 		return false;
+	}
+
+	public void onFileTransferStatusChanged(FileTransferStatusChangedEvent e) {
+
+		if ( e.isFileTransferFinished() ) {
+			
+			if ( e.getTarget().getUrl().equals(getCurrentDirectory().getUrl()) ) {
+				refreshCurrentDirectory();
+			}
+			
+		}
+		
+	}
+
+	public HandlerRegistration addValueChangeHandler(
+			ValueChangeHandler<GrisuFileObject> arg0) {
+
+		return addHandler(arg0, ValueChangeEvent.getType());
+		
+	}
+	
+	private void setStatusPath() {
+
+//		ToolTipConfig tt = new ToolTipConfig("Absolute path", getCurrentDirectory().getUrl());
+//		tt.setShowDelay(3000);
+//		getGrid().setToolTip(tt);
 	}
 }

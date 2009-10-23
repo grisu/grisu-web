@@ -19,14 +19,15 @@ public class Application
   public void onModuleLoad()
   {
 
+	  MessagePopUp mp = new MessagePopUp();
+	  
 	  Viewport v = new Viewport();  
 	  v.setLayout(new FitLayout());  
 	  
 	  LoginPanel l = new LoginPanel();
 
 	  v.add(l);
-	  
 	  RootPanel.get().add( v );
-	  
+	  v.layout();
   }
 }

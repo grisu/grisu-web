@@ -3,7 +3,9 @@ package org.vpac.grisu.webclient.client.external;
 public class Constants {
 	
 	public static final String GENERIC_APPLICATION_NAME = "generic";
-	public static final String NO_VERSION_INDICATOR_STRING = "no_version";
+	public static final String NO_VERSION_INDICATOR_STRING = "any_version";
+	
+	public static final String STATUS_STRING = "status";
 	
 	// Static strings for JobProperty objects
 	public static final String JOBNAME_KEY = "jobname";
@@ -59,6 +61,19 @@ public class Constants {
 	public static final String RELATIVE_MULTIJOB_DIRECTORY_KEY = "multijob_directory";
 	
 	public static final String ERROR_REASON = "errorReason";
-
-
+	
+	// user properties
+	public static final String DEFAULT_FQAN = "defaultFqan";
+	
+	// default job properties
+	public static final String GENERIC_JOB_LAST_WALLTIME_IN_MINUTES = "genericJobLastWalltime";
+	public static final String GENERIC_JOB_LAST_CPUS = "genericJobLastCpus";
+	public static final String GENERIC_JOB_LAST_EMAIL = "genericJobLastEmail";
+	public static final String GENERIC_JOB_LAST_USE_EMAIL = "genericJobLastUseEmail";
+	public static final String LAST_VERSION = "lastVersion";
+	public static final String GENERIC_JOB_LAST_INPUTFILE_URL = "generic_job_last_inputfile_url";
+	
+	// other user properties
+	public static final String LEFT_FILE_BROWSER_LAST_URL = "left_fileBrowser_last_url";
+	public static final String RIGHT_FILE_BROWSER_LAST_URL = "right_fileBrowser_last_url";
 }

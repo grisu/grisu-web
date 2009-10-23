@@ -1,10 +1,13 @@
 package org.vpac.grisu.webclient.client;
 
 import java.util.List;
+import java.util.Map;
 
 import org.vpac.grisu.client.model.dto.DtoActionStatus;
 import org.vpac.grisu.webclient.client.exceptions.LoginException;
 import org.vpac.grisu.webclient.client.files.GrisuFileObject;
+import org.vpac.grisu.webclient.client.files.GwtGrisuCacheFile;
+import org.vpac.grisu.webclient.client.jobcreation.JobCreationException;
 import org.vpac.grisu.webclient.client.jobmonitoring.GrisuJob;
 
 import com.google.gwt.core.client.GWT;
@@ -34,8 +37,26 @@ public interface GrisuClientService extends RemoteService {
 	
 	public List<GrisuJob> ps(String application, boolean refresh);
 	
+	public List<String> getAllJobnames(String application);
+	
 	public List<GrisuFileObject> ls(String url);
 	
+	public GrisuFileObject getFile(String url);
+	
 	public String cp(List<String> sources, String target);
+	
+	public GwtGrisuCacheFile download(String fileUrl);
+	
+	public Map<String, String> getUserProperties();
+	
+	public String getUserProperty(String key);
+	
+	public void setUserProperty(String key, String value);
+	
+	public String[] getApplicationForExecutable(String executable);
+	
+	public String[] getVersionsOfApplicationForVO(String[] applicationNames, String fqan);
+	
+	public void submitJob(Map<String, String> jobProperties) throws JobCreationException;
 	
 }

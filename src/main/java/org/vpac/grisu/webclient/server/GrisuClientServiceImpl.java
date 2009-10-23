@@ -1,10 +1,16 @@
 package org.vpac.grisu.webclient.server;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
+import javax.activation.DataSource;
+import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringUtils;
@@ -14,16 +20,25 @@ import org.dozer.Mapper;
 import org.vpac.grisu.client.model.dto.DtoActionStatus;
 import org.vpac.grisu.control.ServiceInterface;
 import org.vpac.grisu.control.exceptions.RemoteFileSystemException;
+import org.vpac.grisu.control.info.CachedMdsInformationManager;
 import org.vpac.grisu.frontend.control.login.LoginParams;
 import org.vpac.grisu.frontend.control.login.ServiceInterfaceFactory;
 import org.vpac.grisu.model.dto.DtoJob;
 import org.vpac.grisu.model.dto.DtoJobs;
 import org.vpac.grisu.model.dto.DtoStringList;
+import org.vpac.grisu.model.job.JobSubmissionObjectImpl;
 import org.vpac.grisu.settings.ClientPropertiesManager;
+import org.vpac.grisu.settings.Environment;
+import org.vpac.grisu.utils.FileHelpers;
 import org.vpac.grisu.webclient.client.GrisuClientService;
 import org.vpac.grisu.webclient.client.exceptions.LoginException;
 import org.vpac.grisu.webclient.client.files.GrisuFileObject;
+import org.vpac.grisu.webclient.client.files.GwtGrisuCacheFile;
+import org.vpac.grisu.webclient.client.jobcreation.JobCreationException;
 import org.vpac.grisu.webclient.client.jobmonitoring.GrisuJob;
+
+import au.org.arcs.jcommons.constants.Constants;
+import au.org.arcs.jcommons.interfaces.InformationManager;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -45,6 +60,17 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 		
 		return fileSpaceManager;
 		
+	}
+	
+	private InformationManager infoManager = null;
+	
+	private InformationManager getInfoManager() {
+
+		if (infoManager == null) {
+			infoManager = new CachedMdsInformationManager(Environment.getGrisuDirectory().toString());
+		}
+		return infoManager;
+
 	}
 	
 	private ServiceInterface getServiceInterface() {
@@ -167,6 +193,12 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 			throw new RuntimeException(e);
 		}
 	}
+	
+	public GrisuFileObject getFile(String url) {
+
+		return getFileSpaceManager().createFileObject(url);
+		
+	}
 
 	public String cp(List<String> sources, String target) {
 
@@ -181,6 +213,98 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 		return handle;
 	}
 
-	
+	public GwtGrisuCacheFile download(String fileUrl) {
+		
+		DataSource source = null;
+		GwtGrisuCacheFile newFile = null;
+		try {
+			source = getServiceInterface().download(fileUrl).getDataSource();
+			String filename = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
+			
+			File tempFile = new File(CacheFileSpace.getUploadFolderAsFile("markusTest"), filename);
+			
+			FileHelpers.saveToDisk(source, tempFile);
+			String localPath = tempFile.getAbsolutePath();
+			String url = CacheFileSpace.relativePathToWebRoot(localPath);
+			
+			String mimeType = new MimetypesFileTypeMap()
+					.getContentType(tempFile);
+
+			newFile = new GwtGrisuCacheFile(localPath, url, mimeType, fileUrl);
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return newFile;
+	}
+
+	public String getUserProperty(String key) {
+
+		return getServiceInterface().getUserProperty(key);
+		
+	}
+
+	public void setUserProperty(String key, String value) {
+
+		getServiceInterface().setUserProperty(key, value);
+	}
+
+	public String[] getApplicationForExecutable(String executable) {
+		
+		String[] exes = getInfoManager().getApplicationsThatProvideExecutable(
+				executable);
+
+		return exes;
+
+	}
+
+	public String[] getVersionsOfApplicationForVO(String[] applicationNames,
+			String fqan) {
+		
+		SortedSet<String> result = new TreeSet<String>();
+		for ( String app : applicationNames ) {
+			String[] temp = getInfoManager().getAllVersionsOfApplicationOnGridForVO(app, fqan);
+			result.addAll(Arrays.asList(temp));
+			
+		}
+		
+		return result.toArray(new String[]{});
+
+	}
+
+	public List<String> getAllJobnames(String application) {
+
+		return getServiceInterface().getAllJobnames(application).getStringList();
+	}
+
+	public Map<String, String> getUserProperties() {
+
+		return getServiceInterface().getUserProperties().propertiesAsMap();
+	}
+
+	public void submitJob(Map<String, String> jobProperties)
+			throws JobCreationException {
+		
+		String fqan = jobProperties.get(Constants.FQAN_KEY);
+		
+		JobSubmissionObjectImpl jso = new JobSubmissionObjectImpl(jobProperties);
+
+		try {
+			getServiceInterface().createJob(jso.getJobDescriptionDocumentAsString(), fqan, "force-name");
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new JobCreationException(e.getLocalizedMessage());
+		}
+
+		try {
+			getServiceInterface().submitJob(jso.getJobname());
+		} catch (Exception e) {
+			throw new RuntimeException(e.getLocalizedMessage());
+		}
+		
+	}
+
 
 }

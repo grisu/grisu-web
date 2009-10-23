@@ -198,8 +198,9 @@ public class FileSpaceManager {
 					result.add(new GrisuFileObject("..", parentUrl, GrisuFileObject.FILETYPE_FOLDER, 0L, null));
 				}
 			}
+
 			DtoFolder folder = si.ls(name, 1);
-			
+
 			for ( DtoFolder childFolder : folder.getChildrenFolders() ) {
 				result.add(new GrisuFileObject(childFolder.getName(), childFolder.getRootUrl(),
 						GrisuFileObject.FILETYPE_FOLDER, 0L, null));
@@ -238,6 +239,7 @@ public class FileSpaceManager {
 			}
 			} catch (Exception e) {
 				e.printStackTrace();
+				throw new RuntimeException(e);
 			}
 		}
 		
@@ -245,7 +247,8 @@ public class FileSpaceManager {
 		
 	}
 	
-	public String calculateFileName(String url) {
-		return url.substring(url.lastIndexOf("/"));
+	public static String calculateFileName(String url) {
+		return url.substring(url.lastIndexOf("/")+1);
 	}
+
 }

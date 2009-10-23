@@ -1,12 +1,14 @@
 package org.vpac.grisu.webclient.client;
 
-import org.vpac.grisu.webclient.client.files.FileManagerPanel;
+import org.vpac.grisu.webclient.client.files.FilePanel;
 import org.vpac.grisu.webclient.client.jobcreation.GenericJobCreationPanel;
 import org.vpac.grisu.webclient.client.jobmonitoring.JobListPanel;
 
+import com.extjs.gxt.ui.client.widget.ContentPanel;
+import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.CardPanel;
 
-public class CenterPanel extends CardPanel {
+public class CenterPanel extends ContentPanel {
 	
 	public final static int JOBCREATION = 0;
 	public final static int JOBLIST = 1;
@@ -14,19 +16,23 @@ public class CenterPanel extends CardPanel {
 	
 	private GenericJobCreationPanel genericJobCreationPanel;
 	private JobListPanel jobListPanel;
-	private FileManagerPanel fileManager;
-
+	private FilePanel filePanel;
+	private CardPanel cardPanel;
+	
 	public CenterPanel() {
-		add(getGenericJobCreationPanel());
-		add(getJobListPanel());
-		add(getFileManagerPanel());
+		setHeaderVisible(false);
+		setBodyBorder(false);
+		setBorders(false);
+		setLayout(new FitLayout());
+		add(getCardPanel());
 	}
+	
 	
 	public void setVisiblePanel(int panel) {
 		switch(panel) {
-		case JOBCREATION: setActiveItem(getGenericJobCreationPanel()); break;
-		case JOBLIST: setActiveItem(getJobListPanel()); break;
-		case FILEMANAGER: setActiveItem(getFileManagerPanel()); break;
+		case JOBCREATION: cardPanel.setActiveItem(getGenericJobCreationPanel()); break;
+		case JOBLIST: getJobListPanel().showJobListTab(); cardPanel.setActiveItem(getJobListPanel()); break;
+		case FILEMANAGER: cardPanel.setActiveItem(getFilePanel()); break;
 		}
 	}
 
@@ -42,10 +48,19 @@ public class CenterPanel extends CardPanel {
 		}
 		return jobListPanel;
 	}
-	private FileManagerPanel getFileManagerPanel() {
-		if ( fileManager == null ) {
-			fileManager = new FileManagerPanel();
+	private FilePanel getFilePanel() {
+		if ( filePanel == null ) {
+			filePanel = new FilePanel();
 		}
-		return fileManager;
+		return filePanel;
+	}
+	private CardPanel getCardPanel() {
+		if (cardPanel == null) {
+			cardPanel = new CardPanel();
+			cardPanel.add(getGenericJobCreationPanel());
+			cardPanel.add(getJobListPanel());
+			cardPanel.add(getFilePanel());
+		}
+		return cardPanel;
 	}
 }

@@ -13,10 +13,9 @@ public class GrisuJob extends BaseModel {
 	private static final long serialVersionUID = 1L;  
 	
 	public static final String ALLPROPERTIES = "allProperties";
-	public static final String STATUS = "status";
 
 	public Integer getStatus() {
-		return (Integer)get(STATUS);
+		return (Integer)get(Constants.STATUS_STRING);
 	}
 
 	public String getJobname() {
@@ -74,7 +73,7 @@ public class GrisuJob extends BaseModel {
 	public GrisuJob(Integer status, Map<String, String> allJobProperties) {
 		
 		set(ALLPROPERTIES, allJobProperties);
-		set(STATUS, status);
+		set(Constants.STATUS_STRING, status);
 
 		for ( String key : allJobProperties.keySet() ) {
 			if ( Constants.NO_CPUS_KEY.equals(key) ||

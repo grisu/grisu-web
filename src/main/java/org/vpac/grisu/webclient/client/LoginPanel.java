@@ -48,6 +48,8 @@ public class LoginPanel extends LayoutContainer {
 					public void onSuccess(Boolean arg0) {
 						getLoginBox().enable();
 						if ( arg0 ) {
+							// init user environment
+							UserEnvironment.getInstance();
 							loadMainPanel();
 						}
 						
@@ -63,7 +65,7 @@ public class LoginPanel extends LayoutContainer {
 			loginBox.setHideCollapseTool(true);
 			loginBox.setSize("260", "140");
 			loginBox.setHeading("Login");
-			loginBox.setCollapsible(true);
+			loginBox.setCollapsible(false);
 			loginBox.setLayout(new FitLayout());
 			loginBox.add(getFormPanel());
 		}
@@ -74,12 +76,13 @@ public class LoginPanel extends LayoutContainer {
 		if (formPanel == null) {
 			formPanel = new FormPanel();
 			formPanel.setLabelAlign(LabelAlign.RIGHT);
+			formPanel.setBodyBorder(false);
 			formPanel.setFieldWidth(144);
 			formPanel.setHeaderVisible(false);
 			formPanel.setCollapsible(true);
 			formPanel.add(getTextField_1());
 			formPanel.add(getTextField_1_1());
-			formPanel.add(getButton());
+			formPanel.addButton(getButton());
 			FormButtonBinding binding = new FormButtonBinding(formPanel);
 			binding.addButton(getButton());
 		}
@@ -112,10 +115,8 @@ public class LoginPanel extends LayoutContainer {
 				@Override
 				public void componentSelected(ButtonEvent ce) {
 
-					final MessageBox box = MessageBox.wait("Logging in",
-							"Logging into grisu service...", "Connecting...");
-
-
+					getLoginBox().mask("Logging in...");
+					
 					GrisuClientService.Util.getInstance().login(
 							getTextField_1().getValue(),
 							getTextField_1_1().getValue(),
@@ -123,7 +124,7 @@ public class LoginPanel extends LayoutContainer {
 
 								public void onFailure(Throwable arg0) {
 
-									box.close();
+									getLoginBox().unmask();
 									
 									String message = arg0.getMessage();
 									
@@ -143,7 +144,7 @@ public class LoginPanel extends LayoutContainer {
 
 								public void onSuccess(Boolean arg0) {
 
-									box.close();
+									getLoginBox().unmask();
 									
 									if ( arg0 ) {
 										loadMainPanel();
