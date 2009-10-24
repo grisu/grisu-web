@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.vpac.grisu.webclient.client.EventBus;
 import org.vpac.grisu.webclient.client.GrisuClientService;
+import org.vpac.grisu.webclient.client.UserEnvironment;
 import org.vpac.grisu.webclient.client.external.Constants;
 import org.vpac.grisu.webclient.client.external.JobConstants;
 import org.vpac.grisu.webclient.client.jobcreation.JobSubmissionFinishedEvent;
@@ -41,7 +42,7 @@ public class JobListPanel extends TabPanel implements JobSubmissionFinishedEvent
 	private Grid<GrisuJob> grid;
 	private ContentPanel contentPanel;
 	
-	private ListLoader loader;
+	private ListLoader loader = UserEnvironment.getInstance().getJobLoader();
 	private Button button;
 	private TabItem tbtmJobList;
 	private ContentPanel joblistParentPanel;
@@ -80,21 +81,21 @@ public class JobListPanel extends TabPanel implements JobSubmissionFinishedEvent
 		};
 		
 		ColumnConfig column = new ColumnConfig();
+		column.setId(Constants.JOBNAME_KEY);
+		column.setHeader("Jobname");
+		column.setWidth(120);
+		configs.add(column);
+		
+		column = new ColumnConfig();
 		column.setId(Constants.STATUS_STRING);
 		column.setHeader("Status");
 		column.setWidth(120);
 		column.setRenderer(statusRenderer);
 		configs.add(column);
-		
-		column = new ColumnConfig();
-		column.setId(Constants.JOBNAME_KEY);
-		column.setHeader("Jobname");
-		column.setWidth(120);
-		configs.add(column);
 
-		column = new ColumnConfig(Constants.APPLICATIONVERSION_KEY, "Version", 90);
-		column.setAlignment(HorizontalAlignment.LEFT);
-		configs.add(column);
+//		column = new ColumnConfig(Constants.APPLICATIONVERSION_KEY, "Version", 90);
+//		column.setAlignment(HorizontalAlignment.LEFT);
+//		configs.add(column);
 
 		column = new ColumnConfig(Constants.FQAN_KEY, "Group", 80);
 		column.setAlignment(HorizontalAlignment.LEFT);
@@ -116,21 +117,7 @@ public class JobListPanel extends TabPanel implements JobSubmissionFinishedEvent
 
 		if (grid == null) {
 			// data proxy
-			RpcProxy<List<GrisuJob>> proxy = new RpcProxy<List<GrisuJob>>() {
-				@Override
-				protected void load(Object loadConfig,
-						AsyncCallback<List<GrisuJob>> callback) {
 
-					GrisuClientService.Util.getInstance().ps("", true, callback);
-					
-				}
-			};
-			
-			loader = new BaseListLoader<ListLoadResult<GrisuJob>>(proxy); 
-			
-			loader.setSortDir(SortDir.DESC);
-			loader.setSortField(Constants.SUBMISSION_TIME_KEY);
-			loader.setRemoteSort(false);	
 			
 			ListStore<GrisuJob> store = new ListStore<GrisuJob>(loader); 
 			loader.load();

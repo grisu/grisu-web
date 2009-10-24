@@ -98,6 +98,17 @@ public class FileSpaceManager {
 		}
 		return null;
 	}
+	
+	private org.vpac.grisu.client.model.MountPoint convertMountPoint(MountPoint mp) {
+		
+		org.vpac.grisu.client.model.MountPoint gwtMountPoint;
+		try {
+			gwtMountPoint = mapper.map(mp, org.vpac.grisu.client.model.MountPoint.class);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return gwtMountPoint;
+	}
 
 	public boolean isSiteName(String site) {
 
@@ -172,7 +183,7 @@ public class FileSpaceManager {
 		} else if ( isSiteName(name) ) {
 
 			if ( includeParentDirectory ) {
-				result.add(new GrisuFileObject("..", GrisuFileObject.FILETYPE_ROOT, GrisuFileObject.FILETYPE_ROOT, 0L, null));
+				result.add(new GrisuFileObject(GrisuFileObject.FILETYPE_ROOT, GrisuFileObject.FILETYPE_ROOT, GrisuFileObject.FILETYPE_ROOT, 0L, null));
 			}
 			
 			List<MountPoint> allMps = new ArrayList<MountPoint>(getMountPointsForSite(name));
@@ -192,10 +203,10 @@ public class FileSpaceManager {
 			if ( includeParentDirectory ) {
 				if ( isMountPointRoot(name) ) {
 					MountPoint mp = getMountPoint(name);
-					result.add(new GrisuFileObject("..", mp.getSite(), GrisuFileObject.FILETYPE_SITE, 0L, null));
+					result.add(new GrisuFileObject(mp.getAlias(), mp.getSite(), GrisuFileObject.FILETYPE_MOUNTPOINT, 0L, null));
 				} else {
 					String parentUrl = getParent(name);
-					result.add(new GrisuFileObject("..", parentUrl, GrisuFileObject.FILETYPE_FOLDER, 0L, null));
+					result.add(new GrisuFileObject(parentUrl.substring(parentUrl.lastIndexOf("/")+1), parentUrl, GrisuFileObject.FILETYPE_FOLDER, 0L, null));
 				}
 			}
 
@@ -223,13 +234,7 @@ public class FileSpaceManager {
 		} else if ( isMountPointAlias(name) ) {
 			MountPoint mp = getMountPointForAlias(name);
 			
-			org.vpac.grisu.client.model.MountPoint gwtMountPoint;
-			try {
-				gwtMountPoint = mapper.map(mp, org.vpac.grisu.client.model.MountPoint.class);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-			fo = new GrisuFileObject(gwtMountPoint);
+			fo = new GrisuFileObject(convertMountPoint(mp));
 		} else {
 			try {
 			if ( si.isFolder(name) ) {

@@ -119,7 +119,6 @@ public class FilePreviewPanel extends LayoutContainer implements ValueChangeHand
 	private com.google.gwt.user.client.ui.Grid getInfoGrid() {
 		if (infoGrid == null) {
 			infoGrid = new com.google.gwt.user.client.ui.Grid(1, 1);
-//			infoGrid.setStyleName("centerCell");
 			infoGrid.setWidget(0, 0, getTxtPleaseDoubleClick());
 			infoGrid.getCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
 			infoGrid.getCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_MIDDLE);

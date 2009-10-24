@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.vpac.grisu.webclient.client.EventBus;
 import org.vpac.grisu.webclient.client.GrisuClientService;
+import org.vpac.grisu.webclient.client.UserEnvironment;
 
 import com.extjs.gxt.ui.client.GXT;
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
@@ -143,18 +144,30 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 				
 				getGrid().mask();
 				
+				int size = ((List<GrisuFileObject>)(event.getData())).size();
+				String html = "Copy "+size+" files to: <br/>"+getCurrentDirectory().getFileName();
+				event.getStatus().update(html);
+				
 			}
 			
 			@Override
 			protected void onDragLeave(DNDEvent event) {
 				getGrid().unmask();
+				
+				DragSource s = event.getDragSource();
+			      if ( s.getStatusText() == null) {
+			    	  String html = GXT.MESSAGES.grid_ddText(((List<GrisuFileObject>)(event.getData())).size());
+			        event.getStatus().update(html);
+			      } else {
+			        event.getStatus().update(Format.substitute(s.getStatusText(), ((List<GrisuFileObject>)(event.getData())).size()));
+			      }
 			}
 			
 			@Override  
 			protected void onDragDrop(DNDEvent event) {  
 				
-				getGrid().unmask();
 			    super.onDragDrop(event);  
+				getGrid().unmask();
 
 			    final List<GrisuFileObject> sources = event.getData();  
 
@@ -198,6 +211,10 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 					ColumnData config, int rowIndex, int colIndex,
 					ListStore<GrisuFileObject> store, Grid<GrisuFileObject> grid) {
 
+				if ( rowIndex == 0 && ! GrisuFileObject.FILETYPE_SITE.equals(model.getFileType())) {
+					return "..";
+				}
+				
 				if (GrisuFileObject.FILETYPE_SITE.equals(model
 						.get(GrisuFileObject.FILETYPE))) {
 					return "<img height=\"11px\" src=\"gxt/images/default/tree/folder.gif\" alt=\"folder\" /> "
@@ -317,7 +334,6 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 				protected void load(Object loadConfig,
 						final AsyncCallback<List<GrisuFileObject>> callback) {
 
-					
 					GrisuFileObject file = null;
 					if ( nextUrlToLoad != null ) {
 						currentDirectory = nextUrlToLoad;
@@ -326,7 +342,6 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 						file = getCurrentlySelectedFile();
 						if (file != null) {
 							if ( GrisuFileObject.FILETYPE_FILE.equals(file.getFileType()) ) {
-								System.out.println("Filetype: file, doing nothing..., shouldn't happen");
 								return;
 							}
 							currentDirectory = file;
@@ -357,12 +372,14 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 					
 					@Override
 					public void loaderBeforeLoad(LoadEvent le) {
+						super.loaderBeforeLoad(le);
 						getGrid().mask("Loading...");
 					}
 					
 					@Override
 					public void loaderLoad(LoadEvent le) {
-//						le.g
+						
+						super.loaderLoad(le);
 						getGrid().unmask();
 						
 						if ( fileListName != null && !"".equals(fileListName) ) {
@@ -376,28 +393,14 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 								return;
 							}
 							
-							GrisuClientService.Util.getInstance().setUserProperty(fileListName, getCurrentDirectory().getUrl(), new AsyncCallback<Void>() {
-
-								public void onFailure(Throwable arg0) {
-									
-									arg0.printStackTrace();
-									
-								}
-
-								public void onSuccess(Void arg0) {
-
-									// nothing to do really
-									System.out.println("Saved property.");
-									
-								}
-							});
-							
-							
+							UserEnvironment.getInstance().setUserProperty(fileListName, getCurrentDirectory().getUrl());
+						
 						}
 					}
 					
 					@Override
 					public void loaderLoadException(LoadEvent le) {
+						super.loaderLoadException(le);
 						getGrid().unmask();
 						le.exception.printStackTrace();
 					}
@@ -414,8 +417,6 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 
 					public void handleEvent(BaseEvent be) {
 
-						System.out.println("Double clicked: "+getCurrentlySelectedFile().getUrl());
-						
 						try {
 						if ( GrisuFileObject.FILETYPE_FILE.equals(getCurrentlySelectedFile().getFileType()) ) {
 							ValueChangeEvent.fire(FileListPanel.this, getCurrentlySelectedFile());
@@ -475,22 +476,8 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 		
 		if ( fileListName != null && ! "".equals(fileListName) ) {
 			
-			GrisuClientService.Util.getInstance().getUserProperty(fileListName, new AsyncCallback<String>() {
-
-				public void onFailure(Throwable arg0) {
-
-					Window.alert("Couldn't load last used directory: "+arg0.getLocalizedMessage());
-					arg0.printStackTrace();
-					
-					setCurrentDirectory((GrisuFileObject)null);
-				}
-
-				public void onSuccess(String arg0) {
-
-					setCurrentDirectory(arg0);
-					lastRetrievedValue = arg0;
-				}
-			});
+			String startUrl = UserEnvironment.getInstance().getUserProperty(fileListName);
+			setCurrentDirectory(startUrl);
 			
 		}
 		

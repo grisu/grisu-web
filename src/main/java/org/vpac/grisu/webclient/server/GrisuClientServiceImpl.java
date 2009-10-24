@@ -3,6 +3,7 @@ package org.vpac.grisu.webclient.server;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.apache.log4j.Logger;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
 import org.vpac.grisu.client.model.dto.DtoActionStatus;
+import org.vpac.grisu.client.model.dto.DtoLogItem;
 import org.vpac.grisu.control.ServiceInterface;
 import org.vpac.grisu.control.exceptions.RemoteFileSystemException;
 import org.vpac.grisu.control.info.CachedMdsInformationManager;
@@ -289,11 +291,24 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 		
 		String fqan = jobProperties.get(Constants.FQAN_KEY);
 		
+		org.vpac.grisu.model.dto.DtoActionStatus dummyStatus = new org.vpac.grisu.model.dto.DtoActionStatus();
+		dummyStatus.setTotalElements(5);
+		dummyStatus.setFinished(false);
+		dummyStatus.setFailed(false);
+		dummyStatus.setCurrentElements(0);
+		dummyStatus.setLastUpdate(new Date());
+		dummyStatus.setLog(new ArrayList<org.vpac.grisu.model.dto.DtoLogItem>());
+		dummyStatus.addElement("Creating job on backend...");
+		actionStatus.put(jobProperties.get(Constants.JOBNAME_KEY), dummyStatus);
+		
 		JobSubmissionObjectImpl jso = new JobSubmissionObjectImpl(jobProperties);
 
 		try {
 			getServiceInterface().createJob(jso.getJobDescriptionDocumentAsString(), fqan, "force-name");
+			actionStatus.remove(jobProperties.get(Constants.JOBNAME_KEY));
 		} catch (Exception e) {
+			dummyStatus.setFailed(true);
+			dummyStatus.setFinished(true);
 			e.printStackTrace();
 			throw new JobCreationException(e.getLocalizedMessage());
 		}

@@ -69,8 +69,9 @@ public class GrisuFileObject extends BaseModel {
 		return (String)get(URL);
 	}
 	
+	
 	public String getFileName() {
-		return (String)get(FILENAME);
+			return (String)get(FILENAME);
 	}
 
 	public Long getFileSize() {

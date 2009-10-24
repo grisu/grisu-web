@@ -1,5 +1,6 @@
 package org.vpac.grisu.webclient.client;
 
+import org.vpac.grisu.model.UserEnvironmentManager;
 import org.vpac.grisu.webclient.client.exceptions.LoginException;
 
 import com.extjs.gxt.ui.client.Style.IconAlign;
@@ -22,14 +23,20 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.RootPanel;
 
-public class LoginPanel extends LayoutContainer {
+public class LoginPanel extends LayoutContainer implements UserEnvironmentLoadedEvent.Handler {
 	private ContentPanel loginBox;
 	private FormPanel formPanel;
 	private TextField<String> textField;
 	private TextField<String> textField_1;
 	private Button button;
+	
+	private final UserEnvironment ue;
 
 	public LoginPanel() {
+		
+		EventBus.get().addHandler(UserEnvironmentLoadedEvent.TYPE, this);
+		ue = UserEnvironment.getInstance();
+
 		setLayout(new CenterLayout());
 		add(getLoginBox());
 		
@@ -46,11 +53,11 @@ public class LoginPanel extends LayoutContainer {
 					}
 
 					public void onSuccess(Boolean arg0) {
-						getLoginBox().enable();
+//						getLoginBox().enable();
 						if ( arg0 ) {
 							// init user environment
-							UserEnvironment.getInstance();
-							loadMainPanel();
+							getLoginBox().mask("Login successful. Getting user environment...");
+							ue.initOrUpdate();
 						}
 						
 					}
@@ -147,7 +154,8 @@ public class LoginPanel extends LayoutContainer {
 									getLoginBox().unmask();
 									
 									if ( arg0 ) {
-										loadMainPanel();
+										getLoginBox().mask("Login successful. Getting user environment...");
+										ue.initOrUpdate();
 									} else {
 										Window.alert("Could not log in for some reason... This is a bug.");
 									}
@@ -172,6 +180,13 @@ public class LoginPanel extends LayoutContainer {
 		  v.add(p);
 		  
 		  RootPanel.get().add( v );
+		
+	}
+
+	public void onUserEnvironmentLoaded(UserEnvironmentLoadedEvent e) {
+
+		getLoginBox().unmask();
+		loadMainPanel();
 		
 	}
 }

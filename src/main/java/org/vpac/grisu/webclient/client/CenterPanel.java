@@ -1,7 +1,7 @@
 package org.vpac.grisu.webclient.client;
 
 import org.vpac.grisu.webclient.client.files.FilePanel;
-import org.vpac.grisu.webclient.client.jobcreation.GenericJobCreationPanel;
+import org.vpac.grisu.webclient.client.jobcreation.BasicJobCreationPanel;
 import org.vpac.grisu.webclient.client.jobmonitoring.JobListPanel;
 
 import com.extjs.gxt.ui.client.widget.ContentPanel;
@@ -14,7 +14,7 @@ public class CenterPanel extends ContentPanel {
 	public final static int JOBLIST = 1;
 	public final static int FILEMANAGER = 2;
 	
-	private GenericJobCreationPanel genericJobCreationPanel;
+	private BasicJobCreationPanel basicJobCreationPanel;
 	private JobListPanel jobListPanel;
 	private FilePanel filePanel;
 	private CardPanel cardPanel;
@@ -36,11 +36,11 @@ public class CenterPanel extends ContentPanel {
 		}
 	}
 
-	private GenericJobCreationPanel getGenericJobCreationPanel() {
-		if (genericJobCreationPanel == null) {
-			genericJobCreationPanel = new GenericJobCreationPanel();
+	private BasicJobCreationPanel getGenericJobCreationPanel() {
+		if (basicJobCreationPanel == null) {
+			basicJobCreationPanel = new BasicJobCreationPanel();
 		}
-		return genericJobCreationPanel;
+		return basicJobCreationPanel;
 	}
 	private JobListPanel getJobListPanel() {
 		if (jobListPanel == null) {

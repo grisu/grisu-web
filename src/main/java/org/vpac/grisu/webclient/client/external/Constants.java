@@ -76,4 +76,5 @@ public class Constants {
 	// other user properties
 	public static final String LEFT_FILE_BROWSER_LAST_URL = "left_fileBrowser_last_url";
 	public static final String RIGHT_FILE_BROWSER_LAST_URL = "right_fileBrowser_last_url";
+	public static final String DEFAULT_VERSION = "default_version_";
 }
