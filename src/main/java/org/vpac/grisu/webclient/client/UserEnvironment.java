@@ -27,7 +27,7 @@ public class UserEnvironment implements JobSubmissionFinishedEvent.Handler {
 	private Map<String, GrisuJob> jobMap = new HashMap<String, GrisuJob>();
 	
 	private Timer jobListRefreshTimer;
-	private int jobListRefreshInMilliSeconds = 10000;
+	private int jobListRefreshInMilliSeconds = 100000;
 
 	private List<String> allJobnames = new ArrayList<String>();
 	private boolean updatingAllJobnames = false;

@@ -316,6 +316,7 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 		try {
 			getServiceInterface().submitJob(jso.getJobname());
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new RuntimeException(e.getLocalizedMessage());
 		}
 		

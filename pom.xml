@@ -65,7 +65,7 @@
 			<groupId>com.extjs</groupId>
 			<artifactId>gxt</artifactId>
 			<version>${gxt.version}</version>
-			<scope>provided</scope>
+			<scope>compile</scope>
 		</dependency>
 
 		<!-- test -->
@@ -112,9 +112,9 @@
 				<version>1.1</version>
 				<executions>
 					<execution>
-						<configuration>
-							<module>org.vpac.grisu.webclient.Application</module>
-						</configuration>
+<!--						<configuration>-->
+<!--							<module>org.vpac.grisu.webclient.Application</module>-->
+<!--						</configuration>-->
 						<goals>
 							<goal>compile</goal>
 							<!--              <goal>generateAsync</goal>-->
@@ -124,24 +124,24 @@
 				</executions>
 
 				<configuration>
-					<runTarget>org.vpac.grisu.Application/Application.html</runTarget>
+					<runTarget>org.vpac.grisu.webclient.Application/Application.html</runTarget>
 				</configuration>
 			</plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<configuration>
-					<webResources>
-						<resource>
-							<directory>war</directory>
-							<excludes>
-								<exclude>**/webclient/*</exclude>
-							</excludes>
-						</resource>
-					</webResources>
-				</configuration>
-			</plugin>
+<!--			<plugin>-->
+<!--				<groupId>org.apache.maven.plugins</groupId>-->
+<!--				<artifactId>maven-war-plugin</artifactId>-->
+<!--				<configuration>-->
+<!--					<webResources>-->
+<!--						<resource>-->
+<!--							<directory>war</directory>-->
+<!--							<excludes>-->
+<!--								<exclude>**/webclient/*</exclude>-->
+<!--							</excludes>-->
+<!--						</resource>-->
+<!--					</webResources>-->
+<!--				</configuration>-->
+<!--			</plugin>-->
 			<!--
 				If you want to use the target/web.xml file mergewebxml produces,
 				tell the war plugin to use it. Also, exclude what you want from the
