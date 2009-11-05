@@ -91,7 +91,7 @@ public class JobListPanel extends TabPanel implements JobSubmissionFinishedEvent
 									TabItem tab = getItemByItemId("tab_"+job.getJobname());
 									remove(tab);
 								} catch (Exception e) {
-									e.printStackTrace();
+									// doesn't matter
 								}
 							}
 						}
