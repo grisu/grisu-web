@@ -40,5 +40,9 @@ public interface GrisuClientServiceAsync {
 	public void getVersionsOfApplicationForVO(String[] applicationNames, String fqan, AsyncCallback<String[]> callback);
 	
 	public void submitJob(Map<String, String> jobProperties, AsyncCallback<Void> callback);
+
+	public void rm(List<GrisuFileObject> files, AsyncCallback<Void> callback);
+
+	public void killJobs(List<GrisuJob> jobs, AsyncCallback<Void> callback);
 	
 }

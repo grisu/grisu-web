@@ -85,4 +85,14 @@ public class GrisuFileObject extends BaseModel {
 	public Date getLastModified() {
 		return (Date)get(LASTMODIFIED);
 	}
+
+	public boolean isFileOrFolder() {
+
+		if ( FILETYPE_FILE.equals(getFileType()) || FILETYPE_FOLDER.equals(getFileType()) ) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 }

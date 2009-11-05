@@ -59,4 +59,8 @@ public interface GrisuClientService extends RemoteService {
 	
 	public void submitJob(Map<String, String> jobProperties) throws JobCreationException;
 	
+	public void rm(List<GrisuFileObject> files);
+	
+	public void killJobs(List<GrisuJob> jobs);
+	
 }

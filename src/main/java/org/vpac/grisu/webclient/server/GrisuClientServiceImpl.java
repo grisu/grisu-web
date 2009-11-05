@@ -322,5 +322,33 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 		
 	}
 
+	public void rm(List<GrisuFileObject> files) {
+
+		List<String> list = new ArrayList<String>();
+		
+		for ( GrisuFileObject file : files ) {
+			if ( file.isFileOrFolder() ) {
+				list.add(file.getUrl());
+			}
+		}
+		
+		DtoStringList toDelete = DtoStringList.fromStringList(list);
+		
+		getServiceInterface().deleteFiles(toDelete);
+		
+	}
+
+	public void killJobs(List<GrisuJob> jobs) {
+
+		List<String> list = new ArrayList<String>();
+		
+		for ( GrisuJob job : jobs ) {
+			list.add(job.getJobname());
+		}
+		
+		getServiceInterface().killJobs(DtoStringList.fromStringColletion(list), true);
+		
+	}
+
 
 }

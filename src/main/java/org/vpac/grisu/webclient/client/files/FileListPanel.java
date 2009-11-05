@@ -10,6 +10,7 @@ import org.vpac.grisu.webclient.client.UserEnvironment;
 
 import com.extjs.gxt.ui.client.GXT;
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
+import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.data.BaseListLoader;
 import com.extjs.gxt.ui.client.data.ListLoadResult;
 import com.extjs.gxt.ui.client.data.ListLoader;
@@ -19,13 +20,17 @@ import com.extjs.gxt.ui.client.data.RpcProxy;
 import com.extjs.gxt.ui.client.dnd.DragSource;
 import com.extjs.gxt.ui.client.dnd.DropTarget;
 import com.extjs.gxt.ui.client.event.BaseEvent;
+import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.DNDEvent;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.LoadListener;
+import com.extjs.gxt.ui.client.event.MenuEvent;
+import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.util.Format;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
+import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.grid.ColumnData;
@@ -33,6 +38,8 @@ import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.grid.GridCellRenderer;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
+import com.extjs.gxt.ui.client.widget.menu.Menu;
+import com.extjs.gxt.ui.client.widget.menu.MenuItem;
 import com.google.gwt.event.logical.shared.HasValueChangeHandlers;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
@@ -43,7 +50,11 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
 
-public class FileListPanel extends LayoutContainer implements FileTransferStatusChangedEvent.Handler, HasValueChangeHandlers<GrisuFileObject> {
+import org.vpac.grisu.webclient.client.jobmonitoring.KillingJobsFinishedEvent;
+
+public class FileListPanel extends LayoutContainer 
+	implements FileTransferStatusChangedEvent.Handler, HasValueChangeHandlers<GrisuFileObject>,
+	FileDeletionFinishedEvent.Handler, KillingJobsFinishedEvent.Handler {
 
 	private Grid grid;
 	private ListLoader loader;
@@ -61,6 +72,8 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 	private ContentPanel containerPanel = null;
 	
 	final Image img = new Image("gxt/images/default/tree/folder.gif");
+	
+	private Menu contextMenu;
 
 //	/**
 //	 * @wbp.parser.constructor
@@ -87,6 +100,41 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 		
 	}
 	
+	private Menu getRightClickContextMenu() {
+		
+		if ( contextMenu == null ) {
+		    contextMenu = new Menu();
+			MenuItem remove = new MenuItem();  
+			remove.setText("Delete selected files");  
+			remove.addSelectionListener(new SelectionListener<MenuEvent>() {
+				public void componentSelected(MenuEvent ce) { 
+					
+					final Dialog simple = new Dialog();  
+					simple.setHeading("Dialog Test");  
+					simple.setButtons(Dialog.YESNO);  
+					simple.setBodyStyleName("pad-text");  
+					simple.addText("Do you really want to delete the selected files?");  
+					simple.setScrollMode(Scroll.AUTO);  
+					simple.setHideOnButtonClick(true);
+					
+					simple.getButtonById(Dialog.YES).addSelectionListener(new SelectionListener<ButtonEvent>() {
+
+						@Override
+						public void componentSelected(ButtonEvent ce) {
+							getGrid().mask("Deleting files...");
+							UserEnvironment.getInstance().deleteFiles(getSelectedItems());
+						}
+					});
+
+					simple.show();
+					
+				}
+			});
+			contextMenu.add(remove); 
+		}
+		return contextMenu;
+	}
+	
 //	private ContentPanel getContainerPanel() {
 //		
 //		if ( containerPanel == null ) {
@@ -101,7 +149,7 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 	private void initialize() {
 		setLayout(new FitLayout());
 		add(getGrid());
-
+		getGrid().setContextMenu(getRightClickContextMenu());
 		gridDragSource = new DragSource(getGrid()) {
 			@Override  
 			protected void onDragStart(DNDEvent e) {  
@@ -178,6 +226,9 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 		gridDropTarget.setAllowSelfAsSource(false);
 		
 		EventBus.get().addHandler(FileTransferStatusChangedEvent.TYPE, this);
+		EventBus.get().addHandler(FileDeletionFinishedEvent.TYPE, this);
+		EventBus.get().addHandler(KillingJobsFinishedEvent.TYPE, this);
+
 	}
 	
 	public List<GrisuFileObject> getSelectedItems() {
@@ -199,10 +250,9 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 	    FileTransferObject fto = new FileTransferObject(sources, target);
 	    
 	    return fto.startTransfer();
-	    
-		
 	}
 	
+
 	private List<ColumnConfig> createColumnConfig() {
 
 		GridCellRenderer<GrisuFileObject> filenameRenderer = new GridCellRenderer<GrisuFileObject>() {
@@ -522,5 +572,27 @@ public class FileListPanel extends LayoutContainer implements FileTransferStatus
 //		ToolTipConfig tt = new ToolTipConfig("Absolute path", getCurrentDirectory().getUrl());
 //		tt.setShowDelay(3000);
 //		getGrid().setToolTip(tt);
+	}
+
+	public void onFilesDeletionFinished(FileDeletionFinishedEvent e) {
+
+		for ( String url : e.getFoldersToRefresh() ) {
+			if ( getCurrentDirectory().getUrl().equals(url) ) {
+				refreshCurrentDirectory();
+				return;
+			}
+		}
+		
+	}
+
+	public void onJobsKilled(KillingJobsFinishedEvent e) {
+
+		for ( String url : e.getFoldersToRefresh() ) {
+			if ( getCurrentDirectory().getUrl().equals(url) ) {
+				refreshCurrentDirectory();
+				return;
+			}
+		}
+		
 	}
 }

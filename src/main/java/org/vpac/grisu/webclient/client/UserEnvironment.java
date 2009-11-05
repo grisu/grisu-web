@@ -5,10 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.vpac.grisu.client.model.dto.DtoActionStatus;
 import org.vpac.grisu.webclient.client.external.Constants;
+import org.vpac.grisu.webclient.client.files.FileDeletionFinishedEvent;
+import org.vpac.grisu.webclient.client.files.GrisuFileObject;
 import org.vpac.grisu.webclient.client.jobcreation.JobSubmissionFinishedEvent;
 import org.vpac.grisu.webclient.client.jobmonitoring.GrisuJob;
 import org.vpac.grisu.webclient.client.jobmonitoring.JobStatusChangedEvent;
+import org.vpac.grisu.webclient.client.jobmonitoring.KillingJobsFinishedEvent;
 
 import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.data.BaseListLoader;
@@ -21,7 +25,8 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class UserEnvironment implements JobSubmissionFinishedEvent.Handler {
+public class UserEnvironment implements JobSubmissionFinishedEvent.Handler,
+		KillingJobsFinishedEvent.Handler {
 
 	private ListLoader jobLoader = null;
 	private Map<String, GrisuJob> jobMap = new HashMap<String, GrisuJob>();
@@ -48,6 +53,7 @@ public class UserEnvironment implements JobSubmissionFinishedEvent.Handler {
 			singleton = new UserEnvironment();
 			EventBus.get().addHandler(JobSubmissionFinishedEvent.TYPE,
 					singleton);
+//			EventBus.get().addHandler()
 		}
 		return singleton;
 	}
@@ -284,6 +290,80 @@ public class UserEnvironment implements JobSubmissionFinishedEvent.Handler {
 						EventBus.get().fireEvent(event);
 					}
 				});
+	}
+	
+	public void killJobs(final List<GrisuJob> jobsToDelete) {
+		
+		if ( jobsToDelete == null || jobsToDelete.size() == 0 ) {
+			return;
+		}
+		
+		GrisuClientService.Util.getInstance().killJobs(jobsToDelete, new AsyncCallback<Void>() {
+
+			public void onFailure(Throwable arg0) {
+				arg0.printStackTrace();
+			}
+
+			public void onSuccess(Void arg0) {
+
+				GrisuClientService.Util.getInstance().getCurrentStatus(jobsToDelete.get(0).getJobname(), new AsyncCallback<DtoActionStatus>() {
+
+					public void onFailure(Throwable arg0) {
+
+						arg0.printStackTrace();
+					}
+
+					public void onSuccess(DtoActionStatus arg0) {
+
+						KillingJobsFinishedEvent event = new KillingJobsFinishedEvent(jobsToDelete, arg0);
+						
+						EventBus.get().fireEvent(event);
+						
+					}
+				});
+				
+			}
+		});
+		
+	}
+	
+	public void deleteFiles(final List<GrisuFileObject> filesToDelete) {
+		
+		GrisuClientService.Util.getInstance().rm(filesToDelete, new AsyncCallback<Void>() {
+
+			public void onFailure(Throwable arg0) {
+
+				arg0.printStackTrace();
+			}
+
+			public void onSuccess(Void arg0) {
+
+				GrisuClientService.Util.getInstance().getCurrentStatus(filesToDelete.get(0).getUrl(), new AsyncCallback<DtoActionStatus>() {
+
+					public void onFailure(Throwable arg0) {
+
+						arg0.printStackTrace();
+						
+					}
+
+					public void onSuccess(DtoActionStatus arg0) {
+
+						FileDeletionFinishedEvent event = new FileDeletionFinishedEvent(filesToDelete, arg0);
+						
+						EventBus.get().fireEvent(event);
+						
+					}
+				});
+				
+			}
+		});
+		
+	}	
+
+	public void onJobsKilled(KillingJobsFinishedEvent e) {
+	
+		getJobLoader().load();
+	
 	}
 
 }

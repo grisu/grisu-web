@@ -4,26 +4,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.vpac.grisu.webclient.client.EventBus;
-import org.vpac.grisu.webclient.client.GrisuClientService;
 import org.vpac.grisu.webclient.client.UserEnvironment;
 import org.vpac.grisu.webclient.client.external.Constants;
 import org.vpac.grisu.webclient.client.external.JobConstants;
 import org.vpac.grisu.webclient.client.jobcreation.JobSubmissionFinishedEvent;
 
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
+import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.Style.SelectionMode;
-import com.extjs.gxt.ui.client.Style.SortDir;
-import com.extjs.gxt.ui.client.data.BaseListLoader;
-import com.extjs.gxt.ui.client.data.ListLoadResult;
 import com.extjs.gxt.ui.client.data.ListLoader;
-import com.extjs.gxt.ui.client.data.RpcProxy;
 import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.Listener;
+import com.extjs.gxt.ui.client.event.MenuEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
+import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.TabItem;
 import com.extjs.gxt.ui.client.widget.TabPanel;
 import com.extjs.gxt.ui.client.widget.button.Button;
@@ -35,8 +33,9 @@ import com.extjs.gxt.ui.client.widget.grid.GridCellRenderer;
 import com.extjs.gxt.ui.client.widget.grid.GridView;
 import com.extjs.gxt.ui.client.widget.layout.FitData;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
+import com.extjs.gxt.ui.client.widget.menu.Menu;
+import com.extjs.gxt.ui.client.widget.menu.MenuItem;
 import com.google.gwt.i18n.client.DateTimeFormat;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class JobListPanel extends TabPanel implements JobSubmissionFinishedEvent.Handler {
 	private Grid<GrisuJob> grid;
@@ -48,6 +47,8 @@ public class JobListPanel extends TabPanel implements JobSubmissionFinishedEvent
 	private ContentPanel joblistParentPanel;
 	
 	private String fileListName;
+	
+	private Menu contextMenu;
 
 	public JobListPanel() {
 		setBodyBorder(false);
@@ -55,6 +56,46 @@ public class JobListPanel extends TabPanel implements JobSubmissionFinishedEvent
 		add(getTbtmJobList());
 		
 		EventBus.get().addHandler(JobSubmissionFinishedEvent.TYPE, this);
+	}
+	
+	private Menu getRightClickContextMenu() {
+		
+		if ( contextMenu == null ) {
+		    contextMenu = new Menu();
+			MenuItem remove = new MenuItem();  
+			remove.setText("Kill selected jobs");  
+			remove.addSelectionListener(new SelectionListener<MenuEvent>() {
+				public void componentSelected(MenuEvent ce) { 
+					
+					final Dialog simple = new Dialog();  
+					simple.setHeading("Dialog Test");  
+					simple.setButtons(Dialog.YESNO);  
+					simple.setBodyStyleName("pad-text");  
+					simple.addText("Do you really want to kill the selected jobs and delete their jobdirectories?");  
+					simple.setScrollMode(Scroll.AUTO);  
+					simple.setHideOnButtonClick(true);
+					
+					simple.getButtonById(Dialog.YES).addSelectionListener(new SelectionListener<ButtonEvent>() {
+
+						@Override
+						public void componentSelected(ButtonEvent ce) {
+							UserEnvironment.getInstance().killJobs(getSelectedItems());
+						}
+					});
+
+					simple.show();
+					
+				}
+			});
+			contextMenu.add(remove); 
+		}
+		return contextMenu;
+	}
+	
+	public List<GrisuJob> getSelectedItems() {
+		
+		return getGrid().getSelectionModel().getSelectedItems();
+		
 	}
 
 	
@@ -185,6 +226,7 @@ public class JobListPanel extends TabPanel implements JobSubmissionFinishedEvent
 			joblistParentPanel.setCollapsible(true);
 			joblistParentPanel.add(getGrid(), new FitData(5));
 			joblistParentPanel.addButton(getButton());
+			getGrid().setContextMenu(getRightClickContextMenu());
 		}
 		return joblistParentPanel;
 	}
