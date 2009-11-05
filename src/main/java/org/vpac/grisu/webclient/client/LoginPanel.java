@@ -38,7 +38,6 @@ public class LoginPanel extends LayoutContainer implements UserEnvironmentLoaded
 		ue = UserEnvironment.getInstance();
 
 		setLayout(new CenterLayout());
-		add(getLoginBox());
 		
 		getLoginBox().disable();
 		GrisuClientService.Util.getInstance().login(
@@ -49,11 +48,12 @@ public class LoginPanel extends LayoutContainer implements UserEnvironmentLoaded
 					public void onFailure(Throwable arg0) {
 						getLoginBox().enable();
 						// doesn't matter
+						add(getLoginBox());
+						layout();
 
 					}
 
 					public void onSuccess(Boolean arg0) {
-//						getLoginBox().enable();
 						if ( arg0 ) {
 							// init user environment
 							getLoginBox().mask("Login successful. Getting user environment...");

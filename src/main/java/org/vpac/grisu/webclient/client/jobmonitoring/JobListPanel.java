@@ -79,7 +79,21 @@ public class JobListPanel extends TabPanel implements JobSubmissionFinishedEvent
 
 						@Override
 						public void componentSelected(ButtonEvent ce) {
-							UserEnvironment.getInstance().killJobs(getSelectedItems());
+							
+							
+							final List<GrisuJob> selectedJobItems = getSelectedJobItems();
+							
+							UserEnvironment.getInstance().killJobs(selectedJobItems);
+							
+							for ( GrisuJob job : selectedJobItems ) {
+								getGrid().getStore().remove(job);
+								try {
+									TabItem tab = getItemByItemId("tab_"+job.getJobname());
+									remove(tab);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
 						}
 					});
 
@@ -92,7 +106,7 @@ public class JobListPanel extends TabPanel implements JobSubmissionFinishedEvent
 		return contextMenu;
 	}
 	
-	public List<GrisuJob> getSelectedItems() {
+	public List<GrisuJob> getSelectedJobItems() {
 		
 		return getGrid().getSelectionModel().getSelectedItems();
 		
@@ -183,12 +197,11 @@ public class JobListPanel extends TabPanel implements JobSubmissionFinishedEvent
 					
 					SingleJobPanel newPanel = new SingleJobPanel(selected);
 					TabItem newTab = new TabItem(selected.getJobname());
+					newTab.setId("tab_"+selected.getJobname());
 					newTab.setLayout(new FitLayout());
 					newTab.add(newPanel);
 					newTab.setClosable(true);
-					
 					add(newTab);
-					
 					setSelection(newTab);
 				}
 

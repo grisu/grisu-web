@@ -53,7 +53,7 @@ public class UserEnvironment implements JobSubmissionFinishedEvent.Handler,
 			singleton = new UserEnvironment();
 			EventBus.get().addHandler(JobSubmissionFinishedEvent.TYPE,
 					singleton);
-//			EventBus.get().addHandler()
+			EventBus.get().addHandler(KillingJobsFinishedEvent.TYPE, singleton);
 		}
 		return singleton;
 	}

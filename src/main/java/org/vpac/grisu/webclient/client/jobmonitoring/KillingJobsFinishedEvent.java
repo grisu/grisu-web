@@ -48,7 +48,7 @@ public class KillingJobsFinishedEvent extends GwtEvent<KillingJobsFinishedEvent.
 		Set<String> folders = new HashSet<String>();
 		
 		for ( GrisuJob job : getJobs() ) {
-			folders.add(job.getJobDirectory());
+			folders.add(job.getJobDirectory().substring(0, job.getJobDirectory().lastIndexOf("/")));
 		}
 		
 		return folders;
