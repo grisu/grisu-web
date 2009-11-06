@@ -1,6 +1,5 @@
 package org.vpac.grisu.webclient.client;
 
-import org.vpac.grisu.model.UserEnvironmentManager;
 import org.vpac.grisu.webclient.client.exceptions.LoginException;
 
 import com.extjs.gxt.ui.client.Style.IconAlign;

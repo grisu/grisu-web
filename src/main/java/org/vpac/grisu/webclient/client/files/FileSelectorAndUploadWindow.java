@@ -39,6 +39,8 @@ public class FileSelectorAndUploadWindow extends Window implements ValueChangeHa
 			
 		}
 	};
+	private TabItem tbtmUploadFile;
+	private FileUploadPanel fileUploadPanel;
 
 	public FileSelectorAndUploadWindow(String optionalFileListName) {
 		this.fileListName = optionalFileListName;
@@ -55,6 +57,7 @@ public class FileSelectorAndUploadWindow extends Window implements ValueChangeHa
 		if (tabPanel == null) {
 			tabPanel = new TabPanel();
 			tabPanel.add(getTbtmSelectFile());
+			tabPanel.add(getTbtmUploadFile());
 		}
 		return tabPanel;
 	}
@@ -136,5 +139,19 @@ public class FileSelectorAndUploadWindow extends Window implements ValueChangeHa
 			ValueChangeHandler<List<GrisuFileObject>> arg0) {
 
 		return addHandler(arg0, ValueChangeEvent.getType());
+	}
+	private TabItem getTbtmUploadFile() {
+		if (tbtmUploadFile == null) {
+			tbtmUploadFile = new TabItem("Upload file");
+			tbtmUploadFile.setLayout(new FitLayout());
+			tbtmUploadFile.add(getFileUploadPanel());
+		}
+		return tbtmUploadFile;
+	}
+	private FileUploadPanel getFileUploadPanel() {
+		if (fileUploadPanel == null) {
+			fileUploadPanel = new FileUploadPanel();
+		}
+		return fileUploadPanel;
 	}
 }
