@@ -1,15 +1,44 @@
 <web-app>
-	<display-name>GWT-Maven-Archetype</display-name>	
-	
+	<display-name>GWT-Maven-Archetype</display-name>
+
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>
 	<servlet>
 		<servlet-name>GrisuClientService</servlet-name>
-		<servlet-class>org.vpac.grisu.webclient.server.GrisuClientServiceImpl</servlet-class>
+		<servlet-class>org.vpac.grisu.webclient.server.GrisuClientServiceImpl
+		</servlet-class>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>GrisuClientService</servlet-name>
-		<url-pattern>/org.vpac.grisu.webclient.Application/GrisuClientService</url-pattern>
+		<url-pattern>/org.vpac.grisu.webclient.Application/GrisuClientService
+		</url-pattern>
+	</servlet-mapping>
+
+	<context-param>
+		<!-- max size of the upload request -->
+		<param-name>maxSize</param-name>
+		<param-value>3145728</param-value>
+	</context-param>
+
+	<context-param>
+		<!--
+			Useful in development mode to slow down the uploads in fast networks.
+			Put the number of milliseconds to sleep in each block received in the
+			server. false or 0, means don't use slow uploads
+		-->
+		<param-name>slowUploads</param-name>
+		<param-value>200</param-value>
+	</context-param>
+
+	<servlet>
+		<servlet-name>uploadServlet</servlet-name>
+		<!-- put here your customized servlet extending UploadAction -->
+		<servlet-class>gwtupload.server.UploadServlet</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>uploadServlet</servlet-name>
+		<url-pattern>*.gupld</url-pattern>
 	</servlet-mapping>
 </web-app>

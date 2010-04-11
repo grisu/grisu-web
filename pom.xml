@@ -13,8 +13,8 @@
 
 	<properties>
 		<!-- convenience to define GWT version in one place -->
-		<gwt.version>1.7.1</gwt.version>
-		<gxt.version>2.0.1</gxt.version>
+		<gwt.version>2.0.0</gwt.version>
+		<gxt.version>2.1.0</gxt.version>
 		<!--  tell the compiler we can use 1.5 -->
 		<maven.compiler.source>1.5</maven.compiler.source>
 		<maven.compiler.target>1.5</maven.compiler.target>
@@ -115,6 +115,12 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>au.org.arcs.auth</groupId>
+			<artifactId>arcs-gsi</artifactId>
+			<version>1.2-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -123,7 +129,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>gwt-maven-plugin</artifactId>
-				<version>1.1</version>
+				<version>1.2</version>
 				<executions>
 					<execution>
 <!--						<configuration>-->
@@ -138,6 +144,7 @@
 				</executions>
 
 				<configuration>
+					<module>org.vpac.grisu.webclient.Application</module>
 					<runTarget>org.vpac.grisu.webclient.Application/Application.html</runTarget>
 				</configuration>
 			</plugin>

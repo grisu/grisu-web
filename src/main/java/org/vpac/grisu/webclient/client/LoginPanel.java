@@ -28,16 +28,16 @@ public class LoginPanel extends LayoutContainer implements UserEnvironmentLoaded
 	private TextField<String> textField;
 	private TextField<String> textField_1;
 	private Button button;
-	
+
 	private final UserEnvironment ue;
 
 	public LoginPanel() {
-		
+
 		EventBus.get().addHandler(UserEnvironmentLoadedEvent.TYPE, this);
 		ue = UserEnvironment.getInstance();
 
 		setLayout(new CenterLayout());
-		
+
 		getLoginBox().disable();
 		GrisuClientService.Util.getInstance().login(
 				getTextField_1().getValue(),
@@ -58,24 +58,65 @@ public class LoginPanel extends LayoutContainer implements UserEnvironmentLoaded
 							getLoginBox().mask("Login successful. Getting user environment...");
 							ue.initOrUpdate();
 						}
-						
+
 					}
 				});
 
 	}
 
-	private ContentPanel getLoginBox() {
-		if (loginBox == null) {
-			loginBox = new ContentPanel();
-			loginBox.setBorders(false);
-			loginBox.setHideCollapseTool(true);
-			loginBox.setSize("260", "140");
-			loginBox.setHeading("Login");
-			loginBox.setCollapsible(false);
-			loginBox.setLayout(new FitLayout());
-			loginBox.add(getFormPanel());
+	private Button getButton() {
+		if (button == null) {
+			button = new Button("Login", new SelectionListener<ButtonEvent>() {
+
+				@Override
+				public void componentSelected(ButtonEvent ce) {
+
+					getLoginBox().mask("Logging in...");
+
+					GrisuClientService.Util.getInstance().login(
+							getTextField_1().getValue(),
+							getTextField_1_1().getValue(),
+							new AsyncCallback<Boolean>() {
+
+								public void onFailure(Throwable arg0) {
+
+									getLoginBox().unmask();
+
+									String message = arg0.getMessage();
+
+									if ( arg0 instanceof LoginException ) {
+										message = ((LoginException)arg0).getLoginError();
+
+									}
+
+									MessageBox.alert("Login error", message, new Listener<MessageBoxEvent>() {
+
+										public void handleEvent(
+												MessageBoxEvent be) {
+										}
+									});
+
+								}
+
+								public void onSuccess(Boolean arg0) {
+
+									getLoginBox().unmask();
+
+									if ( arg0 ) {
+										getLoginBox().mask("Login successful. Getting user environment...");
+										ue.initOrUpdate();
+									} else {
+										Window.alert("Could not log in for some reason... This is a bug.");
+									}
+
+
+								}
+							});
+				}
+			});
+			button.setIconAlign(IconAlign.RIGHT);
 		}
-		return loginBox;
+		return button;
 	}
 
 	private FormPanel getFormPanel() {
@@ -93,6 +134,20 @@ public class LoginPanel extends LayoutContainer implements UserEnvironmentLoaded
 			binding.addButton(getButton());
 		}
 		return formPanel;
+	}
+
+	private ContentPanel getLoginBox() {
+		if (loginBox == null) {
+			loginBox = new ContentPanel();
+			loginBox.setBorders(false);
+			loginBox.setHideCollapseTool(true);
+			loginBox.setSize("260", "140");
+			loginBox.setHeading("Login");
+			loginBox.setCollapsible(false);
+			loginBox.setLayout(new FitLayout());
+			loginBox.add(getFormPanel());
+		}
+		return loginBox;
 	}
 
 	protected TextField<String> getTextField_1() {
@@ -114,78 +169,24 @@ public class LoginPanel extends LayoutContainer implements UserEnvironmentLoaded
 		return textField_1;
 	}
 
-	private Button getButton() {
-		if (button == null) {
-			button = new Button("Login", new SelectionListener<ButtonEvent>() {
-
-				@Override
-				public void componentSelected(ButtonEvent ce) {
-
-					getLoginBox().mask("Logging in...");
-					
-					GrisuClientService.Util.getInstance().login(
-							getTextField_1().getValue(),
-							getTextField_1_1().getValue(),
-							new AsyncCallback<Boolean>() {
-
-								public void onFailure(Throwable arg0) {
-
-									getLoginBox().unmask();
-									
-									String message = arg0.getMessage();
-									
-									if ( arg0 instanceof LoginException ) {
-										message = ((LoginException)arg0).getLoginError();
-										
-									}
-									
-									MessageBox.alert("Login error", message, new Listener<MessageBoxEvent>() {
-
-										public void handleEvent(
-												MessageBoxEvent be) {
-										}
-									});
-
-								}
-
-								public void onSuccess(Boolean arg0) {
-
-									getLoginBox().unmask();
-									
-									if ( arg0 ) {
-										getLoginBox().mask("Login successful. Getting user environment...");
-										ue.initOrUpdate();
-									} else {
-										Window.alert("Could not log in for some reason... This is a bug.");
-									}
-									
-									
-								}
-							});
-				}
-			});
-			button.setIconAlign(IconAlign.RIGHT);
-		}
-		return button;
-	}
-	
 	public void loadMainPanel() {
 
-		  Viewport v = new Viewport();  
-		  v.setLayout(new FitLayout());  
-		  
-		  MainPanel p = new MainPanel();
+		Viewport v = new Viewport();
+		v.setLayout(new FitLayout());
 
-		  v.add(p);
-		  
-		  RootPanel.get().add( v );
-		
+		MainPanel p = new MainPanel();
+
+		v.add(p);
+
+		RootPanel.get().clear();
+		RootPanel.get().add( v );
+
 	}
 
 	public void onUserEnvironmentLoaded(UserEnvironmentLoadedEvent e) {
 
 		getLoginBox().unmask();
 		loadMainPanel();
-		
+
 	}
 }
