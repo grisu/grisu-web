@@ -340,11 +340,11 @@ public class BasicJobCreationPanel extends LayoutContainer implements
 				voComboBox.add(vo);
 			}
 
-			if (useLastFqan) {
-				voComboBox.setSimpleValue(lastFqan);
-			} else {
-				voComboBox.setSimpleValue(firstValue);
-			}
+//			if (useLastFqan) {
+//				voComboBox.setSimpleValue(lastFqan);
+//			} else {
+//				voComboBox.setSimpleValue(firstValue);
+//			}
 		}
 		return voComboBox;
 	}

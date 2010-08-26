@@ -17,14 +17,14 @@
 
 	  <source path="client" excludes="*/*Test*.java" />
 	  
-	  <inherits name='com.extjs.gxt.ui.GXT'/>
-	  
 	  <inherits name='org.vpac.grisu.GrisuGwt' />
 	  
 	    <!-- Include GWTUpload library -->
  		<inherits name="gwtupload.GWTUpload"/>
   		<!-- Load dinamically predefined styles in the library when the application starts -->
   		<stylesheet src="Upload.css"/>
+  		<inherits name="com.extjs.gxt.ui.GXT"/>
+
 	  
 
 

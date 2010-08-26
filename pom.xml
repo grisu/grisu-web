@@ -13,8 +13,8 @@
 
 	<properties>
 		<!-- convenience to define GWT version in one place -->
-		<gwt.version>2.0.0</gwt.version>
-		<gxt.version>2.1.0</gxt.version>
+		<gwt.version>2.0.4</gwt.version>
+		<gxt.version>2.1.1</gxt.version>
 		<!--  tell the compiler we can use 1.5 -->
 		<maven.compiler.source>1.5</maven.compiler.source>
 		<maven.compiler.target>1.5</maven.compiler.target>
@@ -91,8 +91,14 @@
 			<groupId>org.vpac.grisu</groupId>
 			<artifactId>grisu-core</artifactId>
 			<version>0.3-SNAPSHOT</version>
-			<type>jar</type>
 			<scope>compile</scope>
+			<type>jar</type>
+			<exclusions>
+				<exclusion>
+					<artifactId>bcprov-jdk15</artifactId>
+					<groupId>bouncycastle</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
         	<groupId>gwtupload</groupId>
@@ -118,7 +124,7 @@
 		<dependency>
 			<groupId>au.org.arcs.auth</groupId>
 			<artifactId>arcs-gsi</artifactId>
-			<version>1.2-SNAPSHOT</version>
+			<version>1.2</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
@@ -140,14 +146,28 @@
 							<!--              <goal>generateAsync</goal>-->
 							<!--              <goal>test</goal>-->
 						</goals>
+						
 					</execution>
 				</executions>
 
 				<configuration>
 					<module>org.vpac.grisu.webclient.Application</module>
 					<runTarget>org.vpac.grisu.webclient.Application/Application.html</runTarget>
+<!--					<noServer>true</noServer>-->
+					
 				</configuration>
 			</plugin>
+			
+			      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>2.0.2</version>
+        <configuration>
+          <warSourceDirectory>war</warSourceDirectory>
+          <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
+        </configuration>
+      </plugin>
+			
 
 <!--			<plugin>-->
 <!--				<groupId>org.apache.maven.plugins</groupId>-->

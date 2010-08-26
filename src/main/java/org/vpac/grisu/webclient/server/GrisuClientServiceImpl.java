@@ -22,6 +22,7 @@ import org.vpac.grisu.client.model.dto.DtoActionStatus;
 import org.vpac.grisu.control.ServiceInterface;
 import org.vpac.grisu.control.exceptions.RemoteFileSystemException;
 import org.vpac.grisu.control.info.CachedMdsInformationManager;
+import org.vpac.grisu.frontend.control.login.LoginManager;
 import org.vpac.grisu.frontend.control.login.LoginParams;
 import org.vpac.grisu.frontend.control.login.ServiceInterfaceFactory;
 import org.vpac.grisu.model.dto.DtoJob;
@@ -241,7 +242,7 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 
 		String serviceInterfaceUrl = ClientPropertiesManager.getDefaultServiceInterfaceUrl();
 
-		serviceInterfaceUrl = "ARCS";
+		serviceInterfaceUrl = "Local";
 
 		myLogger.info("Logging in...");
 
@@ -249,6 +250,7 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 				serviceInterfaceUrl, username, password.toCharArray(), "myproxy2.arcs.org.au", "7512");
 
 		ServiceInterface si = null;
+
 		try {
 			si = ServiceInterfaceFactory.createInterface(loginParams);
 			si.login(username, new String(password));
