@@ -240,11 +240,11 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 			myLogger.debug("Could not get serviceinterface from session: "+e.getLocalizedMessage()+". Continuing with real login process...");
 		}
 
-		String serviceInterfaceUrl = ClientPropertiesManager.getDefaultServiceInterfaceUrl();
+//		String serviceInterfaceUrl = ClientPropertiesManager.getDefaultServiceInterfaceUrl();
 
-		serviceInterfaceUrl = "Local";
+		String serviceInterfaceUrl = "Local";
 
-		myLogger.info("Logging in...");
+		myLogger.debug("Logging in...");
 
 		LoginParams loginParams = new LoginParams(
 				serviceInterfaceUrl, username, password.toCharArray(), "myproxy2.arcs.org.au", "7512");
@@ -253,8 +253,11 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 
 		try {
 			si = ServiceInterfaceFactory.createInterface(loginParams);
+			myLogger.debug("Serviceinterface created. Calling login method...");
 			si.login(username, new String(password));
+			myLogger.debug("Login successfull.");
 		} catch (Exception e) {
+			myLogger.debug("Login unsuccessfull.", e);
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			throw new LoginException(e.getLocalizedMessage());
