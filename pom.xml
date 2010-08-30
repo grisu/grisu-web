@@ -93,12 +93,6 @@
 			<version>0.3-SNAPSHOT</version>
 			<scope>compile</scope>
 			<type>jar</type>
-			<exclusions>
-				<exclusion>
-					<artifactId>bcprov-jdk15</artifactId>
-					<groupId>bouncycastle</groupId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
         	<groupId>gwtupload</groupId>
