@@ -1,10 +1,11 @@
 package org.vpac.grisu.webclient.client.files;
 
+import grisu.client.model.dto.DtoActionStatus;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.vpac.grisu.client.model.dto.DtoActionStatus;
 import org.vpac.grisu.webclient.client.EventBus;
 
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
@@ -20,13 +21,18 @@ import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.google.gwt.user.client.Timer;
 
 public class FileTransferMonitorPanel extends ContentPanel implements
-		FileTransferStartedEvent.Handler {
+FileTransferStartedEvent.Handler {
+
+	private static final boolean isDesignTime() {
+		return false;
+	}
 
 	private Grid grid;
 
-	private ListStore<FileTransferObject> fileTransfersToMonitor = new ListStore<FileTransferObject>();
+	private final ListStore<FileTransferObject> fileTransfersToMonitor = new ListStore<FileTransferObject>();
 
-	private Timer t = new Timer() {
+	private final Timer t = new Timer() {
+		@Override
 		public void run() {
 			updateStatus();
 			System.out.println("update");
@@ -36,8 +42,8 @@ public class FileTransferMonitorPanel extends ContentPanel implements
 	public FileTransferMonitorPanel() {
 		setTitle("File transfers");
 		setStateful(true);
-//		getState().put("collapsed", Boolean.TRUE);
-//		setCollapsible(true);
+		//		getState().put("collapsed", Boolean.TRUE);
+		//		setCollapsible(true);
 		setLayout(new FitLayout());
 		add(getGrid());
 
@@ -68,7 +74,7 @@ public class FileTransferMonitorPanel extends ContentPanel implements
 		column.setWidth(120);
 		column.setSortable(false);
 		configs.add(column);
-		
+
 		GridCellRenderer<FileTransferObject> percentageCellRenderer = new GridCellRenderer<FileTransferObject>() {
 
 			public Object render(FileTransferObject model, String property,
@@ -77,31 +83,31 @@ public class FileTransferMonitorPanel extends ContentPanel implements
 					Grid<FileTransferObject> grid) {
 
 				try {
-				DtoActionStatus currentStatus = model.getCurrentStatus();
+					DtoActionStatus currentStatus = model.getCurrentStatus();
 
-				double percentage = 0;
-				if ( currentStatus != null ) {
+					double percentage = 0;
+					if ( currentStatus != null ) {
 
-					double current = currentStatus.getCurrentElements();
-					double total = currentStatus.getTotalElements();
-					percentage = current / total;
-				}
-				
-				
-				ProgressBar progressBar = new ProgressBar();
-				progressBar.setHeight("10");
-				progressBar.updateProgress(percentage, "");
-				int percent = new Double(percentage * 100).intValue();
-				System.out.println("Percent: "+percentage);
-				
-				return progressBar;
+						double current = currentStatus.getCurrentElements();
+						double total = currentStatus.getTotalElements();
+						percentage = current / total;
+					}
+
+
+					ProgressBar progressBar = new ProgressBar();
+					progressBar.setHeight("10");
+					progressBar.updateProgress(percentage, "");
+					int percent = new Double(percentage * 100).intValue();
+					System.out.println("Percent: "+percentage);
+
+					return progressBar;
 				} catch (Exception e) {
 					e.printStackTrace();
 					return "Error: "+e.getLocalizedMessage();
 				}
 			}
 		};
-		
+
 		column = new ColumnConfig();
 		column.setId(FileTransferObject.STATUS_KEY);
 		column.setRenderer(percentageCellRenderer);
@@ -160,6 +166,14 @@ public class FileTransferMonitorPanel extends ContentPanel implements
 		return grid;
 	}
 
+	public void onFileTransferStarted(FileTransferStartedEvent e) {
+
+		fileTransfersToMonitor.add(e.getFileTransferObject());
+
+		t.scheduleRepeating(2000);
+
+	}
+
 	public void updateStatus() {
 
 		boolean allJobsFinished = true;
@@ -171,22 +185,10 @@ public class FileTransferMonitorPanel extends ContentPanel implements
 			}
 			getGrid().getView().refresh(true);
 		}
-		
+
 		if (allJobsFinished) {
 			t.cancel();
 		}
-
-	}
-
-	private static final boolean isDesignTime() {
-		return false;
-	}
-
-	public void onFileTransferStarted(FileTransferStartedEvent e) {
-
-		fileTransfersToMonitor.add(e.getFileTransferObject());
-
-		t.scheduleRepeating(2000);
 
 	}
 

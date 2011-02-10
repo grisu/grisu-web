@@ -1,5 +1,11 @@
 package org.vpac.grisu.webclient.server;
 
+import grisu.control.ServiceInterface;
+import grisu.control.exceptions.RemoteFileSystemException;
+import grisu.model.MountPoint;
+import grisu.model.dto.DtoMountPoints;
+import grisu.model.dto.GridFile;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -12,23 +18,21 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
-import org.vpac.grisu.model.dto.DtoFile;
-import org.vpac.grisu.control.ServiceInterface;
-import org.vpac.grisu.control.exceptions.RemoteFileSystemException;
-import org.vpac.grisu.model.MountPoint;
-import org.vpac.grisu.model.dto.DtoFolder;
-import org.vpac.grisu.model.dto.DtoMountPoints;
 import org.vpac.grisu.webclient.client.files.GrisuFileObject;
 
 public class FileSpaceManager {
-	
+
+	public static String calculateFileName(String url) {
+		return url.substring(url.lastIndexOf("/")+1);
+	}
+
 	private final Mapper mapper = new DozerBeanMapper();
-	
+
 	private DtoMountPoints allMountpoints = null;
 
 	private Set<String> allSites = null;
-
 	private Set<String> allRootUrls = null;
+
 	private Set<String> mpAliases = null;
 
 	private Map<String, Set<MountPoint>> mountPointsPerSite = null;
@@ -40,12 +44,48 @@ public class FileSpaceManager {
 		getAllMountPoints();
 	}
 
-	public Set<String> getAllSites() {
-		return allSites;
+	private String calculateParentFolderUrl(String url) {
+
+		String parent = url.substring(0, url.lastIndexOf("/"));
+
+		return parent;
 	}
 
-	public Set<String> getAllRootUrls() {
-		return allRootUrls;
+	private grisu.client.model.MountPoint convertMountPoint(MountPoint mp) {
+
+		grisu.client.model.MountPoint gwtMountPoint;
+		try {
+			gwtMountPoint = mapper.map(mp, grisu.client.model.MountPoint.class);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return gwtMountPoint;
+	}
+
+	public GrisuFileObject createFileObject(String name) {
+
+		GrisuFileObject fo = null;
+		if ( isSiteName(name) ) {
+			fo = new GrisuFileObject(name);
+		} else if ( isMountPointAlias(name) ) {
+			MountPoint mp = getMountPointForAlias(name);
+
+			fo = new GrisuFileObject(convertMountPoint(mp));
+		} else {
+			try {
+				if ( si.isFolder(name) ) {
+					fo = new GrisuFileObject(calculateFileName(name), name, GrisuFileObject.FILETYPE_FOLDER, 0L, null);
+				} else {
+					fo = new GrisuFileObject(calculateFileName(name), name, GrisuFileObject.FILETYPE_FILE, si.getFileSize(name), new Date(si.lastModified(name)));
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new RuntimeException(e);
+			}
+		}
+
+		return fo;
+
 	}
 
 	private void getAllMountPoints() {
@@ -69,20 +109,72 @@ public class FileSpaceManager {
 		}
 	}
 
-	public Set<MountPoint> getMountPointsForSite(String site) {
-
-		return mountPointsPerSite.get(site);
+	public Set<String> getAllRootUrls() {
+		return allRootUrls;
 	}
 
-	public MountPoint getMountPointForAlias(String alias) {
+	public Set<String> getAllSites() {
+		return allSites;
+	}
 
-		for (MountPoint mp : allMountpoints.getMountpoints()) {
-			if (mp.getAlias().equals(alias)) {
-				return mp;
+	public List<GrisuFileObject> getChildrenFileObjects(boolean includeParentDirectory, String name) throws RemoteFileSystemException {
+
+		List<GrisuFileObject> result = new ArrayList<GrisuFileObject>();
+
+		if ( StringUtils.isBlank(name) || GrisuFileObject.FILETYPE_ROOT.equals(name) ) {
+			List<String> allSites = new ArrayList<String>(getAllSites());
+			Collections.sort(allSites);
+			for ( String site : allSites ) {
+				result.add(new GrisuFileObject(site));
 			}
+
+		} else if ( isSiteName(name) ) {
+
+			if ( includeParentDirectory ) {
+				result.add(new GrisuFileObject(GrisuFileObject.FILETYPE_ROOT, GrisuFileObject.FILETYPE_ROOT, GrisuFileObject.FILETYPE_ROOT, 0L, null));
+			}
+
+			List<MountPoint> allMps = new ArrayList<MountPoint>(getMountPointsForSite(name));
+			Collections.sort(allMps);
+
+			for ( MountPoint mp : allMps ) {
+				result.add(new GrisuFileObject(mp.getAlias(), mp.getRootUrl(),
+						GrisuFileObject.FILETYPE_MOUNTPOINT, 0L, null));
+			}
+
+		} else {
+
+			if ( isMountPointAlias(name) ) {
+				name = getMountPointForAlias(name).getRootUrl();
+			}
+
+			if ( includeParentDirectory ) {
+				if ( isMountPointRoot(name) ) {
+					MountPoint mp = getMountPoint(name);
+					result.add(new GrisuFileObject(mp.getAlias(), mp.getSite(), GrisuFileObject.FILETYPE_MOUNTPOINT, 0L, null));
+				} else {
+					String parentUrl = getParent(name);
+					result.add(new GrisuFileObject(parentUrl.substring(parentUrl.lastIndexOf("/")+1), parentUrl, GrisuFileObject.FILETYPE_FOLDER, 0L, null));
+				}
+			}
+
+			GridFile folder = si.ls(name, 1);
+
+			for (GridFile childFolder : folder.getChildren()) {
+				result.add(new GrisuFileObject(childFolder.getName(),
+						childFolder.getUrl(),
+						GrisuFileObject.FILETYPE_FOLDER, 0L, null));
+			}
+			// for (GridFile child : folder.getChildrenFiles()) {
+			// result.add(new GrisuFileObject(child.getName(),
+			// child.getRootUrl(),
+			// GrisuFileObject.FILETYPE_FILE, child.getSize(), new
+			// Date(child.getLastModified())));
+			// }
 		}
 
-		return null;
+		return result;
+
 	}
 
 	public MountPoint getMountPoint(String url) {
@@ -98,58 +190,21 @@ public class FileSpaceManager {
 		}
 		return null;
 	}
-	
-	private org.vpac.grisu.client.model.MountPoint convertMountPoint(MountPoint mp) {
-		
-		org.vpac.grisu.client.model.MountPoint gwtMountPoint;
-		try {
-			gwtMountPoint = mapper.map(mp, org.vpac.grisu.client.model.MountPoint.class);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-		return gwtMountPoint;
-	}
 
-	public boolean isSiteName(String site) {
+	public MountPoint getMountPointForAlias(String alias) {
 
-		for (String sitename : allSites) {
-			if (sitename.equals(site)) {
-				return true;
+		for (MountPoint mp : allMountpoints.getMountpoints()) {
+			if (mp.getAlias().equals(alias)) {
+				return mp;
 			}
 		}
 
-		return false;
+		return null;
 	}
 
-	public boolean isMountPointRoot(String url) {
+	public Set<MountPoint> getMountPointsForSite(String site) {
 
-		for (String rootUrl : allRootUrls) {
-			if (rootUrl.equals(url)) {
-				return true;
-			}
-		}
-
-		return false;
-
-	}
-
-	public boolean isMountPointAlias(String url) {
-
-		for (String alias : mpAliases) {
-			if (alias.equals(url)) {
-				return true;
-			}
-		}
-
-		return false;
-
-	}
-
-	private String calculateParentFolderUrl(String url) {
-
-		String parent = url.substring(0, url.lastIndexOf("/"));
-
-		return parent;
+		return mountPointsPerSite.get(site);
 	}
 
 	public String getParent(String url_or_name) {
@@ -169,91 +224,39 @@ public class FileSpaceManager {
 				+ url_or_name);
 	}
 
-	public List<GrisuFileObject> getChildrenFileObjects(boolean includeParentDirectory, String name) throws RemoteFileSystemException {
-		
-		List<GrisuFileObject> result = new ArrayList<GrisuFileObject>();
-		
-		if ( StringUtils.isBlank(name) || GrisuFileObject.FILETYPE_ROOT.equals(name) ) {
-			List<String> allSites = new ArrayList<String>(getAllSites());
-			Collections.sort(allSites);
-			for ( String site : allSites ) {
-				result.add(new GrisuFileObject(site));
-			}
-			
-		} else if ( isSiteName(name) ) {
+	public boolean isMountPointAlias(String url) {
 
-			if ( includeParentDirectory ) {
-				result.add(new GrisuFileObject(GrisuFileObject.FILETYPE_ROOT, GrisuFileObject.FILETYPE_ROOT, GrisuFileObject.FILETYPE_ROOT, 0L, null));
-			}
-			
-			List<MountPoint> allMps = new ArrayList<MountPoint>(getMountPointsForSite(name));
-			Collections.sort(allMps);
-			
-			for ( MountPoint mp : allMps ) {
-				result.add(new GrisuFileObject(mp.getAlias(), mp.getRootUrl(),
-						GrisuFileObject.FILETYPE_MOUNTPOINT, 0L, null));
-			}
-			
-		} else {
-			
-			if ( isMountPointAlias(name) ) {
-				name = getMountPointForAlias(name).getRootUrl();
-			}
-			
-			if ( includeParentDirectory ) {
-				if ( isMountPointRoot(name) ) {
-					MountPoint mp = getMountPoint(name);
-					result.add(new GrisuFileObject(mp.getAlias(), mp.getSite(), GrisuFileObject.FILETYPE_MOUNTPOINT, 0L, null));
-				} else {
-					String parentUrl = getParent(name);
-					result.add(new GrisuFileObject(parentUrl.substring(parentUrl.lastIndexOf("/")+1), parentUrl, GrisuFileObject.FILETYPE_FOLDER, 0L, null));
-				}
-			}
-
-			DtoFolder folder = si.ls(name, 1);
-
-			for ( DtoFolder childFolder : folder.getChildrenFolders() ) {
-				result.add(new GrisuFileObject(childFolder.getName(), childFolder.getRootUrl(),
-						GrisuFileObject.FILETYPE_FOLDER, 0L, null));
-			}
-			for ( DtoFile child : folder.getChildrenFiles() ) {
-				result.add(new GrisuFileObject(child.getName(), child.getRootUrl(),
-						GrisuFileObject.FILETYPE_FILE, child.getSize(), new Date(child.getLastModified())));
+		for (String alias : mpAliases) {
+			if (alias.equals(url)) {
+				return true;
 			}
 		}
-		
-		return result;
-		
+
+		return false;
+
 	}
-	
-	public GrisuFileObject createFileObject(String name) {
-		
-		GrisuFileObject fo = null;
-		if ( isSiteName(name) ) {
-			fo = new GrisuFileObject(name);
-		} else if ( isMountPointAlias(name) ) {
-			MountPoint mp = getMountPointForAlias(name);
-			
-			fo = new GrisuFileObject(convertMountPoint(mp));
-		} else {
-			try {
-			if ( si.isFolder(name) ) {
-				fo = new GrisuFileObject(calculateFileName(name), name, GrisuFileObject.FILETYPE_FOLDER, 0L, null);
-			} else {
-				fo = new GrisuFileObject(calculateFileName(name), name, GrisuFileObject.FILETYPE_FILE, si.getFileSize(name), new Date(si.lastModified(name)));
-			}
-			} catch (Exception e) {
-				e.printStackTrace();
-				throw new RuntimeException(e);
+
+	public boolean isMountPointRoot(String url) {
+
+		for (String rootUrl : allRootUrls) {
+			if (rootUrl.equals(url)) {
+				return true;
 			}
 		}
-		
-		return fo;
-		
+
+		return false;
+
 	}
-	
-	public static String calculateFileName(String url) {
-		return url.substring(url.lastIndexOf("/")+1);
+
+	public boolean isSiteName(String site) {
+
+		for (String sitename : allSites) {
+			if (sitename.equals(site)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 }

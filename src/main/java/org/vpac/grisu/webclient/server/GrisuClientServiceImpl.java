@@ -1,5 +1,20 @@
 package org.vpac.grisu.webclient.server;
 
+import grisu.client.model.dto.DtoActionStatus;
+import grisu.control.ServiceInterface;
+import grisu.control.exceptions.RemoteFileSystemException;
+import grisu.control.info.CachedMdsInformationManager;
+import grisu.frontend.control.login.LoginParams;
+import grisu.frontend.control.login.ServiceInterfaceFactory;
+import grisu.jcommons.constants.Constants;
+import grisu.jcommons.interfaces.InformationManager;
+import grisu.model.dto.DtoJob;
+import grisu.model.dto.DtoJobs;
+import grisu.model.dto.DtoStringList;
+import grisu.model.job.JobSubmissionObjectImpl;
+import grisu.settings.Environment;
+import grisu.utils.FileHelpers;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,29 +33,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
-import org.vpac.grisu.client.model.dto.DtoActionStatus;
-import org.vpac.grisu.control.ServiceInterface;
-import org.vpac.grisu.control.exceptions.RemoteFileSystemException;
-import org.vpac.grisu.control.info.CachedMdsInformationManager;
-import org.vpac.grisu.frontend.control.login.LoginManager;
-import org.vpac.grisu.frontend.control.login.LoginParams;
-import org.vpac.grisu.frontend.control.login.ServiceInterfaceFactory;
-import org.vpac.grisu.model.dto.DtoJob;
-import org.vpac.grisu.model.dto.DtoJobs;
-import org.vpac.grisu.model.dto.DtoStringList;
-import org.vpac.grisu.model.job.JobSubmissionObjectImpl;
-import org.vpac.grisu.settings.ClientPropertiesManager;
-import org.vpac.grisu.settings.Environment;
-import org.vpac.grisu.utils.FileHelpers;
 import org.vpac.grisu.webclient.client.GrisuClientService;
 import org.vpac.grisu.webclient.client.exceptions.LoginException;
 import org.vpac.grisu.webclient.client.files.GrisuFileObject;
 import org.vpac.grisu.webclient.client.files.GwtGrisuCacheFile;
 import org.vpac.grisu.webclient.client.jobcreation.JobCreationException;
 import org.vpac.grisu.webclient.client.jobmonitoring.GrisuJob;
-
-import au.org.arcs.jcommons.constants.Constants;
-import au.org.arcs.jcommons.interfaces.InformationManager;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -50,7 +48,7 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 
 	private final Mapper mapper = new DozerBeanMapper();
 
-	private final Map<String, org.vpac.grisu.model.dto.DtoActionStatus> actionStatus = new HashMap<String, org.vpac.grisu.model.dto.DtoActionStatus>();
+	private final Map<String, grisu.model.dto.DtoActionStatus> actionStatus = new HashMap<String, grisu.model.dto.DtoActionStatus>();
 
 	private FileSpaceManager fileSpaceManager;
 
@@ -113,7 +111,8 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 
 	public DtoActionStatus getCurrentStatus(String handle) {
 
-		org.vpac.grisu.model.dto.DtoActionStatus status = getServiceInterface().getActionStatus(handle);
+		grisu.model.dto.DtoActionStatus status = getServiceInterface()
+		.getActionStatus(handle);
 
 		if ( status == null ) {
 			status = actionStatus.get(handle);
@@ -125,7 +124,8 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 
 		DtoActionStatus newStatus = null;
 		try {
-			newStatus = mapper.map(status, org.vpac.grisu.client.model.dto.DtoActionStatus.class);
+			newStatus = mapper.map(status,
+					grisu.client.model.dto.DtoActionStatus.class);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
@@ -240,7 +240,7 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 			myLogger.debug("Could not get serviceinterface from session: "+e.getLocalizedMessage()+". Continuing with real login process...");
 		}
 
-//		String serviceInterfaceUrl = ClientPropertiesManager.getDefaultServiceInterfaceUrl();
+		//		String serviceInterfaceUrl = ClientPropertiesManager.getDefaultServiceInterfaceUrl();
 
 		String serviceInterfaceUrl = "Local";
 
@@ -284,7 +284,8 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 
 		myLogger.debug("ps");
 
-		DtoJobs jobs = getServiceInterface().ps(application, refresh);
+		DtoJobs jobs = getServiceInterface().getCurrentJobs(application,
+				refresh);
 
 		List<GrisuJob> result = new ArrayList<GrisuJob>();
 
@@ -323,13 +324,13 @@ public class GrisuClientServiceImpl extends RemoteServiceServlet implements Gris
 
 		String fqan = jobProperties.get(Constants.FQAN_KEY);
 
-		org.vpac.grisu.model.dto.DtoActionStatus dummyStatus = new org.vpac.grisu.model.dto.DtoActionStatus();
+		grisu.model.dto.DtoActionStatus dummyStatus = new grisu.model.dto.DtoActionStatus();
 		dummyStatus.setTotalElements(5);
 		dummyStatus.setFinished(false);
 		dummyStatus.setFailed(false);
 		dummyStatus.setCurrentElements(0);
 		dummyStatus.setLastUpdate(new Date());
-		dummyStatus.setLog(new ArrayList<org.vpac.grisu.model.dto.DtoLogItem>());
+		dummyStatus.setLog(new ArrayList<grisu.model.dto.DtoLogItem>());
 		dummyStatus.addElement("Creating job on backend...");
 		actionStatus.put(jobProperties.get(Constants.JOBNAME_KEY), dummyStatus);
 
